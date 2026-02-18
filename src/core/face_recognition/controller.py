@@ -5,7 +5,6 @@ from fastapi import FastAPI, UploadFile, File
 from typing import List
 from insightface.app import FaceAnalysis
 
-app = FastAPI()
 
 # 1. Initialize AI Model
 face_app = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
