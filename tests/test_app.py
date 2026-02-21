@@ -46,7 +46,7 @@ if st.button("Start Bulk Upload & Process"):
                 upload_resp = requests.put(
                     signed_url, 
                     data=original_file.getvalue(),
-                    headers={"Content-Type": "image/jpeg"} # Ensure this matches backend
+                    headers={"Content-Type": "image/jpeg"} 
                 )
                 
                 if upload_resp.status_code == 200 or upload_resp.status_code == 201:

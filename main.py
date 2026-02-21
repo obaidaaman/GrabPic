@@ -30,7 +30,7 @@ async def lifespan(app : FastAPI):
         firebase_admin.initialize_app(cred, {
         'storageBucket': os.getenv("STORAGE_BUCKET_NAME") 
     })
-        app.state.qdrant_client = QdrantClient(url="http://localhost:6333")
+        app.state.qdrant_client = QdrantClient(url=os.getenv("QDRANT_HOST"), api_key=os.getenv("QDRANT_API_KEY"))
         app.state.face_engine= face_app
         app.state.db = firestore.client()
         app.state.storage_bucket = storage.bucket()

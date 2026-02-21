@@ -24,6 +24,7 @@ dependencies = [
     "tf-keras>=2.20.1",
     "python-multipart>=0.0.22",
     "qdrant-client>=1.17.0",
+    "gunicorn>=25.1.0",
 ]
 
 [dependency-groups]

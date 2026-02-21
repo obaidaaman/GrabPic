@@ -8,3 +8,4 @@ firebase-admin>=7.1.0
 pyjwt>=2.11.0
 pwdlib==0.3.0
 python-dotenv==1.2.1
+gunicorn==25.1.0

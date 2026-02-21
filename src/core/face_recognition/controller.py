@@ -6,7 +6,7 @@ import numpy as np
 from qdrant_client.models import  PointStruct, Filter, MatchValue, FieldCondition, VectorParams, Distance
 from typing import List
 import logging
-
+from fastapi.concurrency import run_in_threadpool
 logger = logging.getLogger(__name__)
 
 async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket):
@@ -60,7 +60,7 @@ async def upload_photos(face_app, contents : bytes, client, db , fileName:str, s
     nparr = np.frombuffer(contents, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
-    faces = face_app.get(img)
+    faces = await run_in_threadpool(face_app.get, img)
     if not faces:
          return {"filename": fileName, "status" : "No faces detected"}
     

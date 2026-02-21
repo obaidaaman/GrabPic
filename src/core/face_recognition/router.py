@@ -21,7 +21,7 @@ async def upload_files(requests: Request, storage_paths: List[str], space_id: st
     background_tasks.add_task(
         run_bulk_ai_processing,
         paths=storage_paths,
-        space_id=space_id,
+        space_id=space_id,  
         face_app=requests.app.state.face_engine,
         qdrant=requests.app.state.qdrant_client,
         db=requests.app.state.db,
