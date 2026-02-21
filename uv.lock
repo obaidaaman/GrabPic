@@ -941,6 +941,7 @@ name = "grabpic"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "argon2-cffi" },
     { name = "fastapi" },
     { name = "firebase-admin" },
     { name = "gunicorn" },
@@ -971,6 +972,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "argon2-cffi", specifier = ">=25.1.0" },
     { name = "fastapi", specifier = "==0.128.6" },
     { name = "firebase-admin", specifier = ">=7.1.0" },
     { name = "gunicorn", specifier = ">=25.1.0" },
