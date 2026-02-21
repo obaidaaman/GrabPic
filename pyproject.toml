@@ -23,4 +23,11 @@ dependencies = [
     "retina-face>=0.0.17",
     "tf-keras>=2.20.1",
     "python-multipart>=0.0.22",
+    "qdrant-client>=1.17.0",
+]
+
+[dependency-groups]
+dev = [
+    "requests>=2.32.5",
+    "streamlit>=1.54.0",
 ]

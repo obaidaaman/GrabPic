@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
-class AuthCreatedSchema(BaseModel):
-    username: str
-    password: str
+class AuthResponseModel(BaseModel):
+    id: str
+    token: str
+    message: str
+    is_new_user: bool

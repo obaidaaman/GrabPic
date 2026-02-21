@@ -8,9 +8,9 @@ cred = credentials.Certificate(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 
 # cred = credentials.Certificate("credentials.json")
 
-firebase_admin.initialize_app(cred)
+# firebase_admin.initialize_app(cred)
 
-db = firestore.client()
+db = "firestore.client()"
 
 def get_db():
     return db

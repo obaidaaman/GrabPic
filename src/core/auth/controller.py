@@ -1,12 +1,17 @@
-from src.models.models import AuthModel, LoginModel
+from src.core.auth.dtos import AuthResponseModel
 from firebase_admin import firestore
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status, Request, Depends
 from src.utils.db import get_db
 from pwdlib import PasswordHash
 from dotenv import load_dotenv
 import jwt
 import os
+from qdrant_client.models import  PointStruct, VectorParams, Distance
+import numpy as np
+import uuid
+import cv2
+
 load_dotenv()
 
 password_hash = PasswordHash.recommended()
@@ -20,83 +25,121 @@ def verify_password(plain_password, hashed_password):
 
 
 
-def create_auth(auth:AuthModel, db : firestore.client):
-    # Username validation
-    # email validation
-    # Then continue to create the user in the database
+
+# Chckeing if the face embedding exists in the DB or not, if yes then fetch that uid only or else create new vector and get that id.
+
+# User clicks "Create Space"
+# Frontend checks for a local JWT. None? Show Camera Modal
+# User takes a selfie --> sent to face_auth_portal
+# Backend returns JWT. Frontend saves it and then proceeds to the "Create Space" form
+
+def face_auth_portal(isOrganiser: bool,contents: bytes, db : firestore.client, face_app, client):
 
 
+    nparr = np.frombuffer(contents, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+    faces = face_app.get(img)
+    if not faces:
+         return { "status" : "No faces detected"}
 
-    user_collection = db.collection("users")
-
-    existing_user = (
-        user_collection.where("username", "==", auth.username)
-        .limit(1)
-        .stream()
+    face = faces[0]
+    if not client.collection_exists("faces_collection"):
+         client.create_collection(
+        collection_name="faces_collection",
+        vectors_config=VectorParams(size=512, distance=Distance.COSINE),
     )
-    existing_email = (
-        user_collection.where("email", "==", auth.email)
-        .limit(1)
-        .stream())
-    if any(existing_user) or any(existing_email):
-        raise HTTPException(400, detail="Username or emailalready exists")
+    new_emb = face.normed_embedding.tolist()
+    search_results = client.query_points(
+            collection_name="faces_collection",
+            query=new_emb,
+            limit=1,
+            score_threshold=0.65  
+        )
     
-    doc_ref = user_collection.document()
-    hashed_password = get_password_hash(auth.password)
-    doc_ref.set({
-        "username" : auth.username,
-        "password" : hashed_password,
-        "email" : auth.email,
-        "created_at": datetime.now(timezone.utc),
-        "is_active" : True
-    })
-    return {
-        "id": doc_ref.id,
-        "username": auth.username,
-        "email": auth.email
+    user_id = None
+    is_new_user = False
+    if search_results.points:
+                 
+                 user_id = search_results.points[0].id
+                 
+    else:
+                 is_new_user = True
+                 user_id = str(uuid.uuid4())
+                 
+                 client.upsert(collection_name="faces_collection",wait=True,points=[
+                 PointStruct(id=user_id,vector=new_emb,payload={"created_at": str(datetime.now()) })])
+                 db.collection("users").document(user_id).set({
+                 "face_id": user_id,
+                 "auth_type": "face_biometric",
+                 "isOrganiser" : isOrganiser,
+                "first_seen": datetime.now(timezone.utc),
+                
+            })
+                 print("Signup created")
+    
+    token_data = {
+         "_id" : user_id,
+         "exp" : datetime.now(timezone.utc) + timedelta(days=7)
     }
-
-
-
-def login_user(login_model : LoginModel, db : firestore.client):
-    user_collection = db.collection("users")
-    existing_user = (
-        user_collection.where("username", "==", login_model.username)
-        .limit(1)
-        .stream()
+    token = jwt.encode(token_data, os.getenv("SECRET_KEY"), os.getenv("ALGORITHM"))
+    return AuthResponseModel(
+          id=user_id,
+          token=token,
+          message="Login successful" if not is_new_user else "Account created and logged in",
+            is_new_user=is_new_user
     )
-    user_docs = list(existing_user)
-    if not user_docs:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Username is wrong")
-    user_doc = user_docs[0]
-    user_data = user_doc.to_dict()
-    if not verify_password(login_model.password, user_data["password"]):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Password is incorrect")
     
-    # payload {} --> data on which token should be created
-    # exp --> we can also add expiry time for this token, currently not required.
-    token = jwt.encode({"_id": user_doc.id},os.getenv("SECRET_KEY"), os.getenv("ALGORITHM"))
-    return {
-        "message" : "Login Success",
-        "token" : token
-    }
+      
+            
+# def login_user(login_model : LoginModel, db : firestore.client):
+#     user_collection = db.collection("users")
+#     existing_user = (
+#         user_collection.where("username", "==", login_model.username)
+#         .limit(1)
+#         .stream()
+#     )
+#     user_docs = list(existing_user)
+#     if not user_docs:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Username is wrong")
+#     user_doc = user_docs[0]
+#     user_data = user_doc.to_dict()
+#     if not verify_password(login_model.password, user_data["password"]):
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Password is incorrect")
+    
+#     # payload {} --> data on which token should be created
+#     # exp --> we can also add expiry time for this token, currently not required.
+#     token = jwt.encode({"_id": user_doc.id},os.getenv("SECRET_KEY"), os.getenv("ALGORITHM"))
+#     return {
+#         "message" : "Login Success",
+#         "token" : token
+#     }
 
-def is_authenticated(request : Request, db = Depends(get_db)):
+def is_authenticated(request: Request, db = Depends(get_db)):
     token = request.headers.get("authorization")
     if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization header missing")
-    token = token.split(" ")[-1]
-    data = jwt.decode(token,os.getenv("SECRET_KEY"),algorithms=[ os.getenv("ALGORITHM")])
-    if not data:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    id = data.get("_id")
-    user = db.collection("users").document(id).get()
-    if user.exists:
-        user_data =user.to_dict()
-        return {
-            "id": user.id,
-            "username": user_data.get("username"),
-            "email": user_data.get("email"),
-        }
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
+    
+    try:
+        token = token.split(" ")[-1]
+        data = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+        user_id = data.get("_id")
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") 
+   
+    user_doc = db.collection("users").document(user_id).get()
+    
+    if not user_doc.exists:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    user_data = user_doc.to_dict()
+    
+    
+    return AuthResponseModel(
+        id=user_doc.id,
+        username=user_data.get("username", ""),
+        email=user_data.get("email", ""),
+        is_profile_complete="username" in user_data and "email" in user_data
+    )
+

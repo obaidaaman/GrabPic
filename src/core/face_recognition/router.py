@@ -1,21 +1,38 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File, status
+from fastapi import  APIRouter,status, Request, BackgroundTasks
 from typing import List
-from .controller import upload_photos
+from .controller import  get_signed_urls, run_bulk_ai_processing
+from src.models.models import UploadRequestModel
+
 file_router = APIRouter(prefix="/files", tags=["Files"])
 
+@file_router.post("/get-presigned-url", status_code=status.HTTP_200_OK)
+async def get_presigned_url(request: Request, data : UploadRequestModel):
+    bucket = request.app.state.storage_bucket
+    return  await get_signed_urls(data.fileName, data.space_id, bucket)
+    
+
+    
+
 @file_router.post("/upload", status_code=status.HTTP_201_CREATED)
-async def upload_files(files : List[UploadFile]= File(...)):
-    list_all_results = []
-    if not files:
-        return {"List": []}
+async def upload_files(requests: Request, storage_paths: List[str], space_id: str, background_tasks : BackgroundTasks):
+
     
-    for file in files:
-        content = await file.read()
-        # embeddings = get_faces(content)
-        # embeddingsList.append(embeddings)
-        listembedding =  await upload_photos(content, file.filename)
-        list_all_results.extend(listembedding)
-    
-    return {"List" : list_all_results}
+
+    background_tasks.add_task(
+        run_bulk_ai_processing,
+        paths=storage_paths,
+        space_id=space_id,
+        face_app=requests.app.state.face_engine,
+        qdrant=requests.app.state.qdrant_client,
+        db=requests.app.state.db,
+        bucket=requests.app.state.storage_bucket
+    )
+   
+
+    return {
+        "status": "Accepted",
+        "message": f"Processing {len(storage_paths)} images in the background.",
+        "space_id": space_id
+    }
 
 
