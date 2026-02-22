@@ -4,7 +4,7 @@ import uuid
 import cv2
 from google.cloud import firestore
 import numpy as np
-from qdrant_client.models import  PointStruct, Filter, MatchValue, FieldCondition, VectorParams, Distance
+from qdrant_client.models import  PointStruct, VectorParams, Distance
 from typing import List
 import logging
 from fastapi.concurrency import run_in_threadpool

@@ -1,8 +1,7 @@
 from src.core.auth.dtos import AuthResponseModel
 from firebase_admin import firestore
 from datetime import datetime, timezone, timedelta
-from fastapi import HTTPException, status, Request, Depends
-from src.utils.db import get_db
+from fastapi import HTTPException, status, Request
 from pwdlib import PasswordHash
 from dotenv import load_dotenv
 import jwt

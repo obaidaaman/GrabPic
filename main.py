@@ -11,7 +11,7 @@ from insightface.app import FaceAnalysis
 from qdrant_client import QdrantClient
 import os
 from dotenv import load_dotenv
-import json
+from src.utils.db import get_db
 load_dotenv()
 
 logging.basicConfig(
@@ -48,7 +48,7 @@ async def lifespan(app : FastAPI):
     })
         app.state.qdrant_client = QdrantClient(url=os.getenv("QDRANT_HOST"), api_key=os.getenv("QDRANT_API_KEY"))
         app.state.face_engine= face_app
-        app.state.db = firestore.client()
+        app.state.db = get_db()
         app.state.storage_bucket = storage.bucket()
        
        
