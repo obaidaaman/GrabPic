@@ -10,7 +10,7 @@ class CreateSpaceModel(BaseModel):
     space_name : str = Field(..., description="Name of the space to be created")
     space_password : str = Field(..., description="Password of the space")
     created_by : Optional[str] = Field(..., description="User who created the space")
-    space_id : Optional[str]
+    space_id : Optional[str] = None
     
 
 class LoginModel(BaseModel):

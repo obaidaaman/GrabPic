@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import os
 import uuid
 import cv2
 from google.cloud import firestore
@@ -7,15 +8,17 @@ from qdrant_client.models import  PointStruct, Filter, MatchValue, FieldConditio
 from typing import List
 import logging
 from fastapi.concurrency import run_in_threadpool
+from dotenv import load_dotenv
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket):
     """
     Worker function that processes images one by one in the background.
     """
-    if not qdrant.collection_exists("new_collection"):
+    if not qdrant.collection_exists("faces_collection"):
          qdrant.create_collection(
-        collection_name="new_collection",
+        collection_name="faces_collection",
         vectors_config=VectorParams(size=512, distance=Distance.COSINE),
     )
       
@@ -65,12 +68,16 @@ async def upload_photos(face_app, contents : bytes, client, db , fileName:str, s
          return {"filename": fileName, "status" : "No faces detected"}
     
     image_id = str(uuid.uuid4())
+    bucket_name = os.getenv("STORAGE_BUCKET_NAME")
+    public_url = f"https://storage.googleapis.com/{bucket_name}/{storage_path}"
+    bucket_name = os.getenv("STORAGE_BUCKET_NAME")
     # This is created to map to which space does the image belongs, along with its url.
     image_ref = db.collection("images").document(image_id)
     image_ref.set({
         "filename": fileName,
         "space_id": space_id,
-        "url" : f"{storage_path}/{fileName}",
+        "url" : public_url,
+        "storage_path": storage_path,
         "created_at": firestore.SERVER_TIMESTAMP
     })
     detected_faces_summary = []
@@ -81,11 +88,11 @@ async def upload_photos(face_app, contents : bytes, client, db , fileName:str, s
     for face in faces:
             new_emb = face.normed_embedding.tolist()
             search_results = client.query_points(
-            collection_name="new_collection",
+            collection_name="faces_collection",
             query=new_emb,
-            query_filter=Filter(
-                must=[FieldCondition(key="space_id", match=MatchValue(value=space_id))]
-            ),
+            # query_filter=Filter(
+            #     must=[FieldCondition(key="space_id", match=MatchValue(value=space_id))]
+            # ),
             limit=1,
             score_threshold=0.65  
         )
@@ -97,7 +104,7 @@ async def upload_photos(face_app, contents : bytes, client, db , fileName:str, s
             else:
                  face_id = str(uuid.uuid4())
                  status = "new"
-                 client.upsert(collection_name="new_collection",wait=True,points=[
+                 client.upsert(collection_name="faces_collection",wait=True,points=[
                  PointStruct(id=face_id,vector=new_emb,payload={"space_id": space_id })])
                  db.collection("users").document(face_id).set({
                  "face_id": face_id,

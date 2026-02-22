@@ -1,10 +1,12 @@
+from datetime import timedelta
 from src.models.models import CreateSpaceModel
 from google.cloud import firestore
 from fastapi import HTTPException, status
 from pwdlib import PasswordHash
 from dotenv import load_dotenv
 from src.core.users.dtos import SpaceResponseSchema, ImagesResponseSchema
-
+from datetime import datetime, timezone
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 load_dotenv()
 
@@ -36,10 +38,10 @@ def create_space(create_space_model: CreateSpaceModel, user_id, db):
             "created_at": firestore.SERVER_TIMESTAMP
         })
 
-        return SpaceResponseSchema(id=space_doc.id, name=create_space_model.space_name, created_at=firestore.SERVER_TIMESTAMP)
+        return SpaceResponseSchema(id=space_doc.id, name=create_space_model.space_name, created_at=datetime.now(timezone.utc))
 
     except Exception as e:
-        return {"status": "Error", "message": str(e)}
+       raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
 
 def get_spaces(user_doc_id, db):
     try:
@@ -101,44 +103,64 @@ def join_space(space_model: CreateSpaceModel, db, user_id: str):
         
 
 
-def get_images(user_id, db, space_id):
+
+def get_images(user_id, db, space_id, bucket):
     try:
-        # 1. Fetch appearance records
-        # Use a set to avoid duplicate image fetches
+      
         image_ids = set()
         docs = (
             db.collection("appearances")
-            .where("face_id", "==", user_id)
-            .where("space_id", "==", space_id)
+            .where(filter=FieldFilter("face_id", "==", user_id))
+            .where(filter=FieldFilter("space_id", "==", space_id))
             .stream()
         )
 
         for doc in docs:
-            image_ids.add(doc.get("image_id"))
+            img_id = doc.get("image_id")
+            if img_id:
+                image_ids.add(img_id)
         
         if not image_ids:
             return []
 
-        # 2. Bulk Fetch Images (Faster and Cheaper)
+      
         image_urls = []
-        # Firestore's get_all is much faster than a loop
         image_refs = [db.collection("images").document(img_id) for img_id in image_ids]
         image_docs = db.get_all(image_refs)
 
         for doc in image_docs:
             if doc.exists:
                 data = doc.to_dict()
-                image_urls.append(ImagesResponseSchema(
-                    id=doc.id,
-                    file_name=data.get("filename"),
-                    uploaded_at=data.get("created_at"),
-                    url=data.get("url")
-                ))
+                
+                
+                path = data.get("storage_path")
+                if not path:
+                    print(f"Skipping image is missing in {doc.id}")
+                    continue
+                
+                try:
+                    
+                    blob = bucket.blob(path)
+                    view_url = blob.generate_signed_url(
+                        version="v4",
+                        expiration=timedelta(hours=2), 
+                        method="GET"
+                    )
+                    
+                    uploaded_at = data.get("created_at")
+                    
+                    image_urls.append(ImagesResponseSchema(
+                        id=doc.id,
+                        file_name=data.get("filename", "unknown_file"),
+                        uploaded_at=uploaded_at,
+                        url=view_url
+                    ))
+                except Exception as e:
+                    print(f"Failed to process user image {doc.id}: {e}")
+                    continue
         
-       
         return image_urls
 
     except Exception as e:
-        
-        print(f"Error fetching images: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        print(f"Error fetching images: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")

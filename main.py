@@ -11,6 +11,7 @@ from insightface.app import FaceAnalysis
 from qdrant_client import QdrantClient
 import os
 from dotenv import load_dotenv
+import json
 load_dotenv()
 
 logging.basicConfig(
@@ -25,8 +26,23 @@ async def lifespan(app : FastAPI):
         face_app = FaceAnalysis(name="buffalo_l",providers=['CPUExecutionProvider'])
         
         face_app.prepare(ctx_id=0,det_size=(640,640))
-       
-        cred = credentials.Certificate(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+        # cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        # if not cred:
+        #     raise ValueError("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+        cred_dict= {
+           "type": os.getenv("FirebaseType"),
+           "project_id": os.getenv("project_id"),
+           "private_key_id": os.getenv("private_key_id"),
+           "private_key": os.getenv("private_key"),
+           "client_email": os.getenv("client_email"),
+           "client_id": os.getenv("client_id"),
+           "auth_uri": os.getenv("auth_uri"),
+           "token_uri": os.getenv("token_uri"),
+           "auth_provider_x509_cert_url": os.getenv("auth_provider_x509_cert_url"),
+           "client_x509_cert_url": os.getenv("client_x509_cert_url"),
+           "universe_domain": os.getenv("universe_domain")
+       }
+        cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred, {
         'storageBucket': os.getenv("STORAGE_BUCKET_NAME") 
     })

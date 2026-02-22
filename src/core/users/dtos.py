@@ -2,16 +2,16 @@
 
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 class SpaceResponseSchema(BaseModel):
-    id: int
+    id: str
     name: str    
-    created_at: Optional[datetime] = None
+    created_at: Any= None
     updated_at: Optional[datetime] = None
 
 
 class ImagesResponseSchema(BaseModel):
-    id: int
+    id: str
     file_name: str    
     uploaded_at: Optional[datetime] = None
     url : str

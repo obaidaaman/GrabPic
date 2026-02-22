@@ -62,6 +62,7 @@ def face_auth_portal(isOrganiser: bool,contents: bytes, db : firestore.client, f
     if search_results.points:
                  
                  user_id = search_results.points[0].id
+                 print("User already exists, logging in")
                  
     else:
                  is_new_user = True
@@ -92,31 +93,10 @@ def face_auth_portal(isOrganiser: bool,contents: bytes, db : firestore.client, f
     
       
             
-# def login_user(login_model : LoginModel, db : firestore.client):
-#     user_collection = db.collection("users")
-#     existing_user = (
-#         user_collection.where("username", "==", login_model.username)
-#         .limit(1)
-#         .stream()
-#     )
-#     user_docs = list(existing_user)
-#     if not user_docs:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Username is wrong")
-#     user_doc = user_docs[0]
-#     user_data = user_doc.to_dict()
-#     if not verify_password(login_model.password, user_data["password"]):
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Password is incorrect")
-    
-#     # payload {} --> data on which token should be created
-#     # exp --> we can also add expiry time for this token, currently not required.
-#     token = jwt.encode({"_id": user_doc.id},os.getenv("SECRET_KEY"), os.getenv("ALGORITHM"))
-#     return {
-#         "message" : "Login Success",
-#         "token" : token
-#     }
 
-def is_authenticated(request: Request, db = Depends(get_db)):
+def is_authenticated(request: Request):
     token = request.headers.get("authorization")
+    db = request.app.state.db
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
     
@@ -140,6 +120,9 @@ def is_authenticated(request: Request, db = Depends(get_db)):
         id=user_doc.id,
         username=user_data.get("username", ""),
         email=user_data.get("email", ""),
-        is_profile_complete="username" in user_data and "email" in user_data
+        is_profile_complete="username" in user_data and "email" in user_data,
+        
+        message="Authenticated",
+        is_new_user= user_doc.id not in user_data,  #
     )
 
