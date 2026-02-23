@@ -4,7 +4,7 @@ import uuid
 import cv2
 from google.cloud import firestore
 import numpy as np
-from qdrant_client.models import  PointStruct, VectorParams, Distance
+from qdrant_client.models import  PointStruct, VectorParams, Distance, Filter, FieldCondition, MatchValue, PayloadSchemaType
 from typing import List
 import logging
 from fastapi.concurrency import run_in_threadpool
@@ -21,6 +21,7 @@ async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket):
         collection_name="faces_collection",
         vectors_config=VectorParams(size=512, distance=Distance.COSINE),
     )
+    qdrant.create_payload_index(collection_name="faces_collection", field_name="space_id", field_schema={"type": PayloadSchemaType.KEYWORD})
       
     for path in paths:
         try:
@@ -86,13 +87,13 @@ async def upload_photos(face_app, contents : bytes, client, db , fileName:str, s
     
     
     for face in faces:
-            new_emb = face.normed_embedding.tolist()
+            new_emb = face.normed_embedding
             search_results = client.query_points(
             collection_name="faces_collection",
             query=new_emb,
-            # query_filter=Filter(
-            #     must=[FieldCondition(key="space_id", match=MatchValue(value=space_id))]
-            # ),
+            query_filter=Filter(
+                must=[FieldCondition(key="space_id", match=MatchValue(value=space_id))]
+            ),
             limit=1,
             score_threshold=0.65  
         )

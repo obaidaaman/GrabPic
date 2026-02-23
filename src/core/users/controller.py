@@ -164,3 +164,24 @@ def get_images(user_id, db, space_id, bucket):
     except Exception as e:
         print(f"Error fetching images: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+    
+
+
+def verify_space_acess(space_id:str, user_id:str, db):
+    try:
+        space_ref = db.collection("spaces").document(space_id)
+        space_doc = space_ref.get()
+        if not space_doc.exists:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Space not found")
+        if space_doc.get("created_by")==user_id:
+            return True
+        member_ref = db.collection("membership").document(f"{user_id}_{space_id}")
+        member_ref_doc = member_ref.get()
+        if member_ref_doc.exists and member_ref_doc.get("status")=="active":
+            return True
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access Denied")
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error verifying space access: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")

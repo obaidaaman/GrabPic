@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app : FastAPI):
     logger.info("Starting up the server")
     try:
-        face_app = FaceAnalysis(name="buffalo_l",providers=['CPUExecutionProvider'])
+        face_app = FaceAnalysis(name="buffalo_l",providers=['CUDAExecutionProvider'])
         
         face_app.prepare(ctx_id=0,det_size=(640,640))
         # cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
