@@ -1,33 +1,28 @@
 from fastapi import FastAPI
-from contextlib import asynccontextmanager
-import firebase_admin
-import uvicorn
-import logging
-from src.core.users.router import user_router     
-from src.core.auth.router import auth_router     
-from src.core.face_recognition.router import file_router    
-from firebase_admin import firestore, storage, credentials
-from insightface.app import FaceAnalysis
-from qdrant_client import QdrantClient
-import os
 from dotenv import load_dotenv
-from src.utils.db import get_db
-import httpx
+from contextlib import asynccontextmanager
+from insightface.app import FaceAnalysis
+import logging
+import uvicorn
+from src_face_service.route.router import face_router
+from qdrant_client import QdrantClient
+from firebase_admin import  storage, credentials
+from src_face_service.db.db import get_db
+import os
+import firebase_admin
 load_dotenv()
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger(__name__)
+logging = logging.getLogger(__name__)
 @asynccontextmanager
-async def lifespan(app : FastAPI):
-    logger.info("Starting up the server")
+async def lifespan(app: FastAPI):
     try:
-        
-        # cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-        # if not cred:
-        #     raise ValueError("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+        logging.info("Starting up the application...")
+        face_app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+        face_app.prepare(ctx_id=0, det_size=(640,640))
+
         cred_dict= {
            "type": os.getenv("FirebaseType"),
            "project_id": os.getenv("project_id"),
@@ -44,29 +39,25 @@ async def lifespan(app : FastAPI):
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred, {
         'storageBucket': os.getenv("STORAGE_BUCKET_NAME") 
-    })
-        app.state.qdrant_client = QdrantClient(url=os.getenv("QDRANT_HOST"), api_key=os.getenv("QDRANT_API_KEY"))
-        
+    })        
         app.state.db = get_db()
         app.state.storage_bucket = storage.bucket()
-        app.state.http_client = httpx.AsyncClient()
-       
-        logger.info("AI Models (buffalo_l) loaded successfully into memory.")
+
+        app.state.face_app = face_app
+        app.state.qdrant_client = QdrantClient(url=os.getenv("QDRANT_HOST"), api_key=os.getenv("QDRANT_API_KEY"))
+        logging.info("Application startup complete.")
     except Exception as e:
-        logger.error(f"Failed to load AI models:{str(e)}")
+        logging.error(f"Error during application startup: {e}")
         raise
     yield
-    logger.info("Shutting down: Releasing resources...")
+    logging.info("Shutting down the application...")
+    pass
+
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(user_router)
-app.include_router(auth_router)
-app.include_router(file_router)
+app.include_router(face_router)
 
 
-
-
- 
 if __name__ == "__main__":
-    uvicorn.run(app)
+    uvicorn.run(app,port=8001)

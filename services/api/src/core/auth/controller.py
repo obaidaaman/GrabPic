@@ -7,10 +7,7 @@ from dotenv import load_dotenv
 import jwt
 import os
 from qdrant_client.models import  PointStruct, VectorParams, Distance
-import numpy as np
 import uuid
-import cv2
-import httpx
 load_dotenv()
 
 password_hash = PasswordHash.recommended()
