@@ -1,0 +1,23 @@
+[project]
+name = "insightfacemicroservice"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.128.6",
+    "firebase-admin>=7.1.0",
+    "gunicorn==25.1.0",
+    "insightface>=0.7.3",
+    "onnxruntime>=1.24.1",
+    "opencv-python>=4.13.0.92",
+    "pillow>=12.1.0",
+    "python-dotenv==1.2.1",
+    "python-multipart>=0.0.22",
+    "qdrant-client>=1.17.0",
+    "redis==7.2.1",
+    "retina-face>=0.0.17",
+    "rq==2.7.0",
+    "tf-keras>=2.20.1",
+    "uvicorn==0.34.0",
+]

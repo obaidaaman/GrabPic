@@ -29,3 +29,9 @@ dev = [
     "requests>=2.32.5",
     "streamlit>=1.54.0",
 ]
+
+[tool.uv.workspace]
+members = [
+    "services/src_face_service",
+    "services/src",
+]
