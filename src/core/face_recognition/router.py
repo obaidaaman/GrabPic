@@ -1,6 +1,6 @@
 from fastapi import  APIRouter,status, Request, BackgroundTasks, Depends
 from typing import List
-from .controller import  get_signed_urls, run_bulk_ai_processing
+from .controller import  get_signed_urls,call_face_embedding_service
 from src.models.models import UploadRequestModel
 from src.core.users.controller import verify_space_acess
 from src.core.auth.controller import is_authenticated
@@ -23,15 +23,7 @@ async def upload_files(requests: Request, storage_paths: List[str], space_id: st
 
     
 
-    background_tasks.add_task(
-        run_bulk_ai_processing,
-        paths=storage_paths,
-        space_id=space_id,  
-        face_app=requests.app.state.face_engine,
-        qdrant=requests.app.state.qdrant_client,
-        db=requests.app.state.db,
-        bucket=requests.app.state.storage_bucket
-    )
+    await call_face_embedding_service(storage_paths,space_id, requests.app.state.http_client)
    
 
     return {
@@ -39,5 +31,6 @@ async def upload_files(requests: Request, storage_paths: List[str], space_id: st
         "message": f"Processing {len(storage_paths)} images in the background.",
         "space_id": space_id
     }
+
 
 
