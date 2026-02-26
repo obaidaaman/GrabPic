@@ -15,17 +15,13 @@ dependencies = [
     "python-dotenv==1.2.1",
     "sqlalchemy==2.0.19",
     "uvicorn==0.34.0",
-    "insightface>=0.7.3",
-    "numpy==2.3.0",
-    "onnxruntime-gpu>=1.24.1",
-    "opencv-python>=4.13.0.92",
-    "pillow>=12.1.0",
-    "retina-face>=0.0.17",
-    "tf-keras>=2.20.1",
+
     "python-multipart>=0.0.22",
     "qdrant-client>=1.17.0",
     "gunicorn==25.1.0",
     "argon2-cffi>=25.1.0",
+    "httpx>=0.28.1",
+    "streamlit>=1.54.0",
 ]
 
 [dependency-groups]

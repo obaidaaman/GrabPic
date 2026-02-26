@@ -37,6 +37,17 @@ def create_space(create_space_model: CreateSpaceModel, user_id, db):
             "created_by": create_space_model.created_by,
             "created_at": firestore.SERVER_TIMESTAMP
         })
+        member_ref = db.collection("membership").document(f"{user_id}_{space_doc.id}")
+        if member_ref.get().exists:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already a member of the space")
+    
+
+        member_ref.set({
+        "user_id": user_id,
+        "space_id": space_doc.id,
+        "joined_at": firestore.SERVER_TIMESTAMP,
+        "status": "active"
+    })
 
         return SpaceResponseSchema(id=space_doc.id, name=create_space_model.space_name, created_at=datetime.now(timezone.utc))
 

@@ -12,6 +12,7 @@ from qdrant_client import QdrantClient
 import os
 from dotenv import load_dotenv
 from src.utils.db import get_db
+import httpx
 load_dotenv()
 
 logging.basicConfig(
@@ -23,9 +24,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app : FastAPI):
     logger.info("Starting up the server")
     try:
-        face_app = FaceAnalysis(name="buffalo_l",providers=['CUDAExecutionProvider'])
         
-        face_app.prepare(ctx_id=0,det_size=(640,640))
         # cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         # if not cred:
         #     raise ValueError("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
@@ -47,10 +46,10 @@ async def lifespan(app : FastAPI):
         'storageBucket': os.getenv("STORAGE_BUCKET_NAME") 
     })
         app.state.qdrant_client = QdrantClient(url=os.getenv("QDRANT_HOST"), api_key=os.getenv("QDRANT_API_KEY"))
-        app.state.face_engine= face_app
+        
         app.state.db = get_db()
         app.state.storage_bucket = storage.bucket()
-       
+        app.state.http_client = httpx.AsyncClient()
        
         logger.info("AI Models (buffalo_l) loaded successfully into memory.")
     except Exception as e:
