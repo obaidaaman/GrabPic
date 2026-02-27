@@ -1,4 +1,4 @@
-from fastapi import  APIRouter,status, Request, BackgroundTasks, Depends
+from fastapi import  APIRouter,status, Request, Depends
 from typing import List
 from .controller import  get_signed_urls,call_face_embedding_service
 from src.models.models import UploadRequestModel
@@ -19,11 +19,11 @@ async def get_presigned_url(request: Request, data : UploadRequestModel, current
     
 
 @file_router.post("/upload", status_code=status.HTTP_201_CREATED)
-async def upload_files(requests: Request, storage_paths: List[str], space_id: str, background_tasks : BackgroundTasks):
+async def upload_files(requests: Request, storage_paths: List[str], space_id: str, current_user = Depends(is_authenticated)):
 
     
 
-    await call_face_embedding_service(storage_paths,space_id, requests.app.state.http_client)
+    await call_face_embedding_service(storage_paths,space_id, requests.app.state.http_client,requests.app.state.redis_conn)
    
 
     return {

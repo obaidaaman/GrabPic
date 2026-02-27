@@ -20,8 +20,7 @@ async def upload_files(requests: Request, background_tasks : BackgroundTasks, fa
 
     
 
-    background_tasks.add_task(
-        run_bulk_ai_processing,
+    await run_bulk_ai_processing(
         paths=face_upload_request.storage_paths,
         space_id=face_upload_request.space_id,  
         face_app=requests.app.state.face_app,
