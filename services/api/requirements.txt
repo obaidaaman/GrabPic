@@ -16,3 +16,4 @@ firebase-admin>=7.1.0
 qdrant-client>=1.17.0
 python-dotenv==1.2.1
 httpx>=0.28.1
+upstash-redis==1.6.0

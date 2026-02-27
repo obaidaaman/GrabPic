@@ -12,6 +12,7 @@ import os
 from dotenv import load_dotenv
 from src.utils.db import get_db
 import httpx
+from upstash_redis.asyncio import Redis
 load_dotenv()
 
 logging.basicConfig(
@@ -49,6 +50,7 @@ async def lifespan(app : FastAPI):
         app.state.db = get_db()
         app.state.storage_bucket = storage.bucket()
         app.state.http_client = httpx.AsyncClient()
+        app.state.redis_conn = Redis(url=os.getenv("UPSTASH_REDIS_URL"), token=os.getenv("UPSTASH_REDIS_TOKEN"))
        
         logger.info("AI Models (buffalo_l) loaded successfully into memory.")
     except Exception as e:
