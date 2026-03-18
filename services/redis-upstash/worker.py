@@ -16,7 +16,7 @@ async def process_job(worker_id):
         job = await fetch_job()
 
         if not job:
-            await asyncio.sleep(1)   # 🔑 important: prevent hot loop
+            await asyncio.sleep(1)  
             continue
 
         job = json.loads(job)
@@ -29,7 +29,7 @@ async def process_job(worker_id):
 
             print(f"[Worker-{worker_id}] Processing:", payload)
 
-            # call httpx service here
+          
             response = await httpx_client.post(os.getenv("MODEL_MICRO_SERVICE_URL_FACE"), json={"storage_paths": payload["storage_paths"], "space_id": payload["space_id"]},timeout=30)
             
             await redis_conn.set(f"job_status:{job_id}", "done")

@@ -155,24 +155,25 @@ async def get_signed_urls(filenames: List[str], space_id : str, bucket):
     
 
 
-async def call_face_embedding_service(paths, space_id, httpx_client,redis_client):
+async def call_face_embedding_service(paths, space_id, httpx_client,redis_client, email):
    # await httpx_client.post(os.getenv("MODEL_MICRO_SERVICE_URL_FACE"), json={"storage_paths": paths, "space_id": space_id},timeout=30)
     
-    await push_job(paths=paths, space_id=space_id, redis_conn=redis_client)
+    await push_job(paths=paths, space_id=space_id, redis_conn=redis_client, email=email)
     return {
          "status" : "Accepted",
          "message": f"Embeddings for {len(paths)} images are being processed in the background.",
          "space_id": space_id
     }
 
-async def push_job(paths, space_id,redis_conn):
+async def push_job(paths, space_id,redis_conn, email):
 
     QUEUE= "face_jobs"
     job_data = {
         "job_id": str(uuid.uuid4()),
         "payload": {
             "storage_paths": paths,
-            "space_id": space_id
+            "space_id": space_id,
+            "notification_email" : email
         }
     }
 
