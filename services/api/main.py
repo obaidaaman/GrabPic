@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import firebase_admin
@@ -12,7 +14,9 @@ import os
 from dotenv import load_dotenv
 from src.utils.db import get_db
 import httpx
+import time
 from upstash_redis.asyncio import Redis
+from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 logging.basicConfig(
@@ -52,22 +56,33 @@ async def lifespan(app : FastAPI):
         app.state.http_client = httpx.AsyncClient()
         app.state.redis_conn = Redis(url=os.getenv("UPSTASH_REDIS_URL"), token=os.getenv("UPSTASH_REDIS_TOKEN"))
        
-        logger.info("AI Models (buffalo_l) loaded successfully into memory.")
+        
     except Exception as e:
         logger.error(f"Failed to load AI models:{str(e)}")
         raise
     yield
     logger.info("Shutting down: Releasing resources...")
-
-app = FastAPI(lifespan=lifespan)
+origins = [
+    "*"
+]
+app = FastAPI(lifespan=lifespan, debug=True)
 
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(file_router)
+app.add_middleware(CORSMiddleware,
+    allow_origins= origins,
+    allow_methods=["*"],     # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],)
 
 
+# @app.get("/health")
+# def healthy():
+#     print("Received health check request.")
+#     time.sleep(3)
+#     print("API is healthy and running!")
 
+# @app.get("/health-async")
 
- 
 if __name__ == "__main__":
     uvicorn.run(app)

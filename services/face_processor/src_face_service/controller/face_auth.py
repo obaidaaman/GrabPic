@@ -7,13 +7,16 @@ def process_embedding(contents: bytes, face_app):
         
         nparr = np.frombuffer(contents,np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+         
 
-
-        face = face_app.get(img)[0] 
-        
+        face = face_app.get(img)
         if not face:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Face not Found")
-        embedding = face.normed_embedding.tolist()
+        face1 = face_app.get(img)[0] 
+        
+        if not face1:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Face not Found")
+        embedding = face1.normed_embedding.tolist()
         return {
             "status" : "Success",
             "embedding" : embedding 

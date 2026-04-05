@@ -16,7 +16,7 @@ def process_embedding_route(request: Request,content: bytes = Body(...)):
 
 
 @face_router.post("/upload", status_code=status.HTTP_201_CREATED)
-async def upload_files(requests: Request, background_tasks : BackgroundTasks, face_upload_request: FaceUploadRequest):
+async def upload_files(requests: Request,  face_upload_request: FaceUploadRequest):
 
     
 

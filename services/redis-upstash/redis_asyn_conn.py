@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import httpx
 load_dotenv()
 
-httpx_client = httpx.AsyncClient()
+httpx_client = httpx.AsyncClient(trust_env=False)
 
 redis_conn = Redis(url=os.getenv("UPSTASH_REDIS_URL"), token=os.getenv("UPSTASH_REDIS_TOKEN"))
 
