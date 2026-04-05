@@ -23,7 +23,7 @@ async def upload_files(requests: Request, storage_paths: List[str], space_id: st
 
     
 
-    await call_face_embedding_service(storage_paths,space_id, requests.app.state.http_client,requests.app.state.redis_conn)
+    await call_face_embedding_service(storage_paths,space_id, requests.app.state.http_client,requests.app.state.redis_conn, "amanobaidofficial01@gmail.com")
    
 
     return {

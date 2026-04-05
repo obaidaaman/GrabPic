@@ -3,6 +3,8 @@ import json
 import os
 from redis_asyn_conn import redis_conn
 from redis_asyn_conn import httpx_client
+from dotenv import load_dotenv
+load_dotenv()
 QUEUE = "face_jobs"
 
 async def fetch_job():

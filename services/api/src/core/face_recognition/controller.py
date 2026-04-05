@@ -174,6 +174,7 @@ async def push_job(paths, space_id,redis_conn, email):
             "storage_paths": paths,
             "space_id": space_id,
             "notification_email" : email
+            
         }
     }
 

@@ -2,9 +2,12 @@ from src.core.auth.dtos import AuthResponseModel
 from firebase_admin import firestore
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status, Request
-from pwdlib import PasswordHash
+
 from dotenv import load_dotenv
-import os, logging, jwt, uuid
+import os
+import logging
+import jwt
+import uuid
 from qdrant_client.models import  PointStruct, VectorParams, Distance
 
 load_dotenv()
@@ -23,11 +26,11 @@ _KNOWN_INSECURE_KEYS = {
     "secret",
     "your-secret-key",
 }
-if _SECRET_KEY in _KNOWN_INSECURE_KEYS:
-    raise RuntimeError(
-        "SECRET_KEY is set to a well-known insecure value. "
-        "Generate a new one with: python -c \"import secrets; print(secrets.token_hex(32))\""
-    )
+# if _SECRET_KEY in _KNOWN_INSECURE_KEYS:
+#     raise RuntimeError(
+#         "SECRET_KEY is set to a well-known insecure value. "
+#         "Generate a new one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+#     )
  
 if _ALGORITHM not in ("HS256", "HS384", "HS512"):
     raise RuntimeError(f"Unsupported ALGORITHM '{_ALGORITHM}'. Use HS256, HS384, or HS512.")
@@ -38,8 +41,8 @@ def _create_token(user_id: str, is_organiser: bool) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "_id":          user_id,
-        "is_organiser": is_organiser,   # FIX: role is set server-side, not by the caller
-        "iat":          now,            # FIX: missing in original
+        "is_organiser": is_organiser,  
+        "iat":          now,         
         "exp":          now + timedelta(days=7),
     }
     return jwt.encode(payload, _SECRET_KEY, algorithm=_ALGORITHM)
@@ -76,7 +79,7 @@ def _decode_token(raw_token: str) -> dict:
         )
  
     except jwt.PyJWTError as e:
-        # Catch-all for any other JWT error — still specific enough to log
+    
         logger.warning("JWT validation failed: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -96,7 +99,7 @@ def _decode_token(raw_token: str) -> dict:
 
 
 
-async def face_auth_portal(isOrganiser: bool,contents: bytes, db : firestore.client, client, httpx_client):
+async def face_auth_portal(contents: bytes, db : firestore.client, client, httpx_client):
 
     # nparr = np.frombuffer(contents, np.uint8)
     # img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -123,6 +126,7 @@ async def face_auth_portal(isOrganiser: bool,contents: bytes, db : firestore.cli
     
     user_id = None
     is_new_user = False
+    isOrganiser= False
     if search_results.points:
                  
                  user_id = search_results.points[0].id
@@ -133,6 +137,7 @@ async def face_auth_portal(isOrganiser: bool,contents: bytes, db : firestore.cli
                  
     else:
                  is_new_user = True
+                 isOrganiser = False  
                  user_id = str(uuid.uuid4())
                  
                  client.upsert(collection_name="faces_collection",wait=True,points=[
@@ -149,7 +154,7 @@ async def face_auth_portal(isOrganiser: bool,contents: bytes, db : firestore.cli
                 "first_seen": datetime.now(timezone.utc),
                 
             })
-                 logger.info("New user created: ", user_id, isOrganiser)
+                 logger.info("New user created: %s", user_id)
     
     token = _create_token(user_id,isOrganiser)
     return AuthResponseModel(
