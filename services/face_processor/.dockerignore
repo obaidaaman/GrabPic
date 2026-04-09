@@ -1,0 +1,12 @@
+# services/face_processor/.dockerignore
+
+.venv
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+.env
+*.md
+uv.lock
+.python-version

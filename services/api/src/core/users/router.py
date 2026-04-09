@@ -9,6 +9,13 @@ from typing import List
 # /127:800/user/{your route name}
 user_router = APIRouter(prefix="/users", tags=["Spaces"])
 
+
+async def health_check():
+    return{
+        "status": "ok",
+        "message": "Service is healthy and running."
+    }
+
 @user_router.post("/create-space", status_code=status.HTTP_201_CREATED, response_model=SpaceResponseSchema)
 def create_space(request : Request,space_model : CreateSpaceModel,current_user= Depends(ct.is_authenticated)):
     return controller.create_space(space_model, current_user.id, request.app.state.db)

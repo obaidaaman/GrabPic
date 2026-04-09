@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI):
            "client_x509_cert_url": os.getenv("client_x509_cert_url"),
            "universe_domain": os.getenv("universe_domain")
        }
+        cred_dict["private_key"] = cred_dict["private_key"].replace("\\n", "\n")
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred, {
         'storageBucket': os.getenv("STORAGE_BUCKET_NAME") 
@@ -60,4 +61,4 @@ app.include_router(face_router)
 
 
 if __name__ == "__main__":
-    uvicorn.run(app,port=8001)
+    uvicorn.run(app,port=8080)

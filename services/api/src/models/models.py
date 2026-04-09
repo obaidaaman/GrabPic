@@ -21,3 +21,8 @@ class LoginModel(BaseModel):
 class UploadRequestModel(BaseModel):
     fileName: list[str] = Field(..., description="Name of the file being uploaded")
     space_id: str = Field(..., description="ID of the space where the photo is being uploaded")
+
+class FaceEmbeddingRequestModel(BaseModel):
+    storagePaths: list[str] = Field(..., description="Name of the file being uploaded")
+    space_id: str = Field(..., description="ID of the space where the photo is being uploaded")
+    email: str = Field(..., description="Email of the user uploading the photo")

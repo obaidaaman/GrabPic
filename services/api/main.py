@@ -10,6 +10,7 @@ from src.core.auth.router import auth_router
 from src.core.face_recognition.router import file_router    
 from firebase_admin import storage, credentials
 from qdrant_client import QdrantClient
+from qdrant_client.models import VectorParams
 import os
 from dotenv import load_dotenv
 from src.utils.db import get_db
@@ -18,6 +19,9 @@ import time
 from upstash_redis.asyncio import Redis
 from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
+
+
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,7 +54,12 @@ async def lifespan(app : FastAPI):
         firebase_admin.initialize_app(cred, {
         'storageBucket': os.getenv("STORAGE_BUCKET_NAME") 
     })
-        app.state.qdrant_client = QdrantClient(url=os.getenv("QDRANT_HOST"), api_key=os.getenv("QDRANT_API_KEY"))
+        qdrant_client = QdrantClient(url=os.getenv("QDRANT_HOST"), api_key=os.getenv("QDRANT_API_KEY"))
+        if not qdrant_client.collection_exists("faces_collection"):
+            qdrant_client.create_collection(
+                collection_name="faces_collection"
+         , vectors_config=VectorParams(size=512,)   )
+        app.state.qdrant_client = qdrant_client
         
         app.state.db = get_db()
         app.state.storage_bucket = storage.bucket()
