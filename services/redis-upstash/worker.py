@@ -8,17 +8,32 @@ load_dotenv()
 QUEUE = "face_jobs"
 
 async def fetch_job():
-    job = await redis_conn.rpop(QUEUE)
-    return job
+    result = await redis_conn.blpop(QUEUE, timeout=5)
+    if result is None:
+        return None
+    _, job_data = result
+    return job_data
 
 async def process_job(worker_id):
+    """
+    Worker function that continuously fetches and processes jobs from the Redis queue.
+    Args:
+    worker_id: An identifier for the worker (useful for logging).
+    
+    Status Updates:
+- "queued": Job is waiting in the queue.
+- "processing": Job is currently being processed by a worker.
+- "completed": Job has been successfully processed.
+- "failed": An error occurred during processing.
+    """
     print(f"Worker-{worker_id} started...")
 
     while True:
         job = await fetch_job()
 
+
         if not job:
-            await asyncio.sleep(1)  
+             
             continue
 
         job = json.loads(job)
@@ -32,9 +47,13 @@ async def process_job(worker_id):
             print(f"[Worker-{worker_id}] Processing:", payload)
 
           
-            response = await httpx_client.post(os.getenv("MODEL_MICRO_SERVICE_URL_FACE"), json={"storage_paths": payload["storage_paths"], "space_id": payload["space_id"]},timeout=30)
-            
-            await redis_conn.set(f"job_status:{job_id}", "done")
+            response = await httpx_client.post(os.getenv("MODEL_MICRO_SERVICE_URL_FACE"), json={"storage_paths": payload["storage_paths"], "space_id": payload["space_id"]},timeout=120)
+            if response.status_code !=200:
+                await redis_conn.set(f"job_status:{job_id}", "failed")
+                raise Exception(f"Failed to process job {job_id}: {response.text}")
+                
+            await redis_conn.set(f"job_status:{job_id}", "completed")
+
 
         except Exception as e:
             await redis_conn.set(f"job_status:{job_id}", "failed")

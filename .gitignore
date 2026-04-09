@@ -11,3 +11,4 @@ wheels/
 
 credentials.json
 .env
+Dockerfile

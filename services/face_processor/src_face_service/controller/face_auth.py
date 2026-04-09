@@ -12,7 +12,7 @@ def process_embedding(contents: bytes, face_app):
         face = face_app.get(img)
         if not face:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Face not Found")
-        face1 = face_app.get(img)[0] 
+        face1 = face[0] 
         
         if not face1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Face not Found")
