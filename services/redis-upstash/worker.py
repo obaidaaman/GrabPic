@@ -89,9 +89,9 @@ QUEUE = "face_jobs"
 
 
 async def fetch_job():
-    # Upstash doesn't support blpop — use rpop instead
+    
     result = await redis_conn.rpop(QUEUE)
-    return result   # returns None if queue empty, or JSON string if job exists
+    return result   
 
 
 async def process_job(worker_id):
@@ -101,8 +101,8 @@ async def process_job(worker_id):
         job = await fetch_job()
 
         if not job:
-            # Nothing in queue — wait 2 seconds before checking again
-            await asyncio.sleep(2)
+        
+            await asyncio.sleep(3)
             continue
 
         job = json.loads(job)

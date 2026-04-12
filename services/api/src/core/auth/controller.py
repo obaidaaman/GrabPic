@@ -2,7 +2,8 @@ from src.core.auth.dtos import AuthResponseModel
 from firebase_admin import firestore
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status, Request
-
+import httpx
+import time
 from dotenv import load_dotenv
 import os
 import logging
@@ -99,70 +100,139 @@ def _decode_token(raw_token: str) -> dict:
 
 
 
-async def face_auth_portal(contents: bytes, db : firestore.client, client, httpx_client):
 
-    # nparr = np.frombuffer(contents, np.uint8)
-    # img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
+
+async def face_auth_portal(contents: bytes, db, client, httpx_client):
+
+    try:
+
+        try:
+            start = time.time()
+
+            response = await httpx_client.post(
+                os.getenv("MODEL_MICRO_SERVICE_URL"),
+                content=contents,
+                headers={"Content-Type": "application/octet-stream"},
+                timeout=httpx.Timeout(30.0, read=60.0)
+            )
+
+            response.raise_for_status()
+
+            logger.info(f"ML response time: {time.time() - start:.2f}s")
+
+        except httpx.ReadTimeout:
+            logger.error("ML service timeout")
+            return {"status": "error", "message": "Face processing timeout"}
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"ML service HTTP error: {e.response.text}")
+            return {"status": "error", "message": "ML service failed"}
+
+        except Exception as e:
+            logger.exception("Unexpected error during ML call")
+            return {"status": "error", "message": "Internal ML error"}
+
+
+        try:
+            data = response.json()
+        except Exception:
+            logger.error("Invalid JSON from ML service")
+            return {"status": "error", "message": "Invalid ML response"}
+
+        if not data.get("embedding"):
+            return {"status": "No faces detected"}
+
+        new_emb = data["embedding"]
+
       
-    response =  await httpx_client.post(os.getenv("MODEL_MICRO_SERVICE_URL"), content=contents,headers={"Content-Type": "application/octet-stream"})
-    data = response.json()
-    if not data.get("embedding"):
-         return { "status" : "No faces detected"}
+        try:
+            if not client.collection_exists("faces_collection"):
+                client.create_collection(
+                    collection_name="faces_collection",
+                    vectors_config=VectorParams(size=512, distance=Distance.COSINE),
+                )
+        except Exception:
+            logger.exception("Qdrant collection error")
+            return {"status": "error", "message": "Vector DB error"}
 
-    # face = faces[0]
-    if not client.collection_exists("faces_collection"):
-         client.create_collection(
-        collection_name="faces_collection",
-        vectors_config=VectorParams(size=512, distance=Distance.COSINE),
-    )
-    new_emb = data["embedding"]
-    search_results = client.query_points(
-            collection_name="faces_collection",
-            query=new_emb,
-            limit=1,
-            score_threshold=0.65  
-        )
+       
+        try:
+            search_results = client.query_points(
+                collection_name="faces_collection",
+                query=new_emb,
+                limit=1,
+                score_threshold=0.65
+            )
+        except Exception:
+            logger.exception("Qdrant search failed")
+            return {"status": "error", "message": "Search failed"}
+
     
-    user_id = None
-    is_new_user = False
-    isOrganiser= False
-    if search_results.points:
-                 
-                 user_id = search_results.points[0].id
-                 logger.info("Face matched — existing user logging in: %s", user_id)
-                 user_doc = db.collection("users").document(user_id).get()
-                 if user_doc.exists:
-                    isOrganiser = user_doc.to_dict().get("isOrganiser", False) 
-                 
-    else:
-                 is_new_user = True
-                 isOrganiser = False  
-                 user_id = str(uuid.uuid4())
-                 
-                 client.upsert(collection_name="faces_collection",wait=True,points=[
-                      
-                 PointStruct(id=user_id,vector=new_emb,payload={"created_at": str(datetime.now())
-                     }
-                     )
-             ]
-              )
-                 db.collection("users").document(user_id).set({
-                 "face_id": user_id,
-                 "auth_type": "face_biometric",
-                 "isOrganiser" : isOrganiser,
-                "first_seen": datetime.now(timezone.utc),
-                
-            })
-                 logger.info("New user created: %s", user_id)
-    
-    token = _create_token(user_id,isOrganiser)
-    return AuthResponseModel(
-          id=user_id,
-          token=token,
-          message="Login successful" if not is_new_user else "Account created and logged in",
+        user_id = None
+        is_new_user = False
+        isOrganiser = False
+
+        if search_results.points:
+            try:
+                user_id = search_results.points[0].id
+                logger.info(f"Face matched — existing user: {user_id}")
+
+                user_doc = db.collection("users").document(user_id).get()
+
+                if user_doc.exists:
+                    isOrganiser = user_doc.to_dict().get("isOrganiser", False)
+
+            except Exception:
+                logger.exception("Firestore read error")
+                return {"status": "error", "message": "User fetch failed"}
+
+        else:
+            try:
+                is_new_user = True
+                user_id = str(uuid.uuid4())
+
+                client.upsert(
+                    collection_name="faces_collection",
+                    wait=True,
+                    points=[
+                        PointStruct(
+                            id=user_id,
+                            vector=new_emb,
+                            payload={"created_at": str(datetime.now())}
+                        )
+                    ]
+                )
+
+                db.collection("users").document(user_id).set({
+                    "face_id": user_id,
+                    "auth_type": "face_biometric",
+                    "isOrganiser": False,
+                    "first_seen": datetime.now(timezone.utc),
+                })
+
+                logger.info(f"New user created: {user_id}")
+
+            except Exception:
+                logger.exception("User creation failed")
+                return {"status": "error", "message": "User creation failed"}
+
+        try:
+            token = _create_token(user_id, isOrganiser)
+        except Exception:
+            logger.exception("Token generation failed")
+            return {"status": "error", "message": "Auth token failed"}
+
+        return AuthResponseModel(
+            id=user_id,
+            token=token,
+            message="Login successful" if not is_new_user else "Account created and logged in",
             is_new_user=is_new_user
-    )
+        )
+
+    except Exception:
+        # Global fallback (should rarely hit)
+        logger.exception("Unhandled error in face_auth_portal")
+        return {"status": "error", "message": "Unexpected server error"}
     
 def is_authenticated(request: Request) -> AuthResponseModel:
     
