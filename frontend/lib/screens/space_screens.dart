@@ -93,7 +93,7 @@ class _CreateSpaceScreenState extends State<CreateSpaceScreen> {
                 // Header
                 _SpaceFormHeader(
                   icon: Icons.add_box_rounded,
-                  color: AppColors.purple,
+                  color: AppColors.textPrimary,
                   title: 'New Event Space',
                   desc: 'Create a private space for your event. Share the name & password with attendees.',
                 ),
@@ -265,7 +265,7 @@ class _JoinSpaceScreenState extends State<JoinSpaceScreen> {
               children: [
                 _SpaceFormHeader(
                   icon: Icons.login_rounded,
-                  color: AppColors.cyan,
+                  color: AppColors.textPrimary,
                   title: 'Join an Event Space',
                   desc: 'Enter the space name and password given to you by the event organiser.',
                 ),
@@ -352,10 +352,11 @@ class _SpaceFormHeader extends StatelessWidget {
         Container(
           width: 64, height: 64,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
           ),
-          child: Icon(icon, color: color, size: 32),
+          child: Icon(icon, color: AppColors.textPrimary, size: 32),
         ),
         const SizedBox(height: 16),
         Text(title, style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
@@ -400,14 +401,14 @@ class _InfoTip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.cyan.withOpacity(0.05),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cyan.withOpacity(0.2)),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline_rounded, color: AppColors.cyan, size: 16),
+          const Icon(Icons.info_outline_rounded, color: AppColors.textSecondary, size: 16),
           const SizedBox(width: 8),
           Expanded(child: Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.5))),
         ],

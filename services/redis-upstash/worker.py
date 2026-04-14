@@ -82,16 +82,14 @@ import json
 import os
 from redis_asyn_conn import redis_conn, httpx_client
 from dotenv import load_dotenv
-
+import httpx
 load_dotenv()
 
 QUEUE = "face_jobs"
 
 
 async def fetch_job():
-    
-    result = await redis_conn.rpop(QUEUE)
-    return result   
+    return await redis_conn.rpop(QUEUE)
 
 
 async def process_job(worker_id):
@@ -101,12 +99,11 @@ async def process_job(worker_id):
         job = await fetch_job()
 
         if not job:
-        
-            await asyncio.sleep(3)
+            print(f"[Worker-{worker_id}] No job, sleeping...")
+            await asyncio.sleep(0.5)
             continue
 
         job = json.loads(job)
-
         job_id = job["job_id"]
         payload = job["payload"]
 
@@ -120,20 +117,20 @@ async def process_job(worker_id):
                     "storage_paths": payload["storage_paths"],
                     "space_id": payload["space_id"]
                 },
-                timeout=120
+                timeout=httpx.Timeout(120.0, connect=10.0)
             )
 
             if response.status_code != 200:
-                raise Exception(f"Face processor returned {response.status_code}: {response.text}")
+                raise Exception(f"{response.status_code}: {response.text}")
 
             await redis_conn.set(f"job_status:{job_id}", "completed")
-            print(f"[Worker-{worker_id}] Job {job_id} completed")
+            print(f"[Worker-{worker_id}] Completed {job_id}")
 
         except Exception as e:
             await redis_conn.set(f"job_status:{job_id}", "failed")
-            print(f"[Worker-{worker_id}] Job {job_id} failed: {e}")
+            print(f"[Worker-{worker_id}] Failed {job_id}: {e}")
 
-
+            
 async def main():
     WORKER_COUNT = 3
 
@@ -142,7 +139,7 @@ async def main():
         for i in range(WORKER_COUNT)
     ]
 
-    await asyncio.gather(*tasks)
+    await asyncio.gather(*tasks,return_exceptions=True)
 
 
 asyncio.run(main())

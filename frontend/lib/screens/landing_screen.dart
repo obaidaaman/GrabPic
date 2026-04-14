@@ -1,10 +1,6 @@
 // lib/screens/landing_screen.dart
 //
-// Indie product landing page.
-//  • CTA buttons visible to everyone.
-//  • If NOT authenticated → clicking Create/Join opens FaceAuthScreen first,
-//    then redirects to the action.
-//  • If authenticated → goes straight to the action.
+// Indie product landing page - Monochromatic theme.
 
 import 'package:flutter/material.dart';
 import 'package:grabpic_frontend/screens/space_screens.dart';
@@ -102,7 +98,7 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
-  // ─── Build ────────────────────────────────────────────────────────────────
+
 
   @override
   Widget build(BuildContext context) {
@@ -114,33 +110,32 @@ class _LandingScreenState extends State<LandingScreen> {
       backgroundColor: AppColors.bg,
       body: CustomScrollView(
         slivers: [
-          // ── Nav Bar ──────────────────────────────────────────────────────
+      
           SliverToBoxAdapter(child: _buildNavBar(isDesktop)),
 
-          // ── Hero ─────────────────────────────────────────────────────────
           SliverToBoxAdapter(
             child: isDesktop
                 ? _buildHeroDesktop()
                 : _buildHeroMobile(),
           ),
 
-          // ── Features ─────────────────────────────────────────────────────
+         
           SliverToBoxAdapter(child: _buildFeatures(isDesktop)),
 
-          // ── How it works ─────────────────────────────────────────────────
+          
           SliverToBoxAdapter(child: _buildHowItWorks(isTablet)),
 
-          // ── Bottom CTA ───────────────────────────────────────────────────
+      
           SliverToBoxAdapter(child: _buildBottomCta()),
 
-          // ── Footer ───────────────────────────────────────────────────────
+        
           SliverToBoxAdapter(child: _buildFooter()),
         ],
       ),
     );
   }
 
-  // ── Nav Bar ───────────────────────────────────────────────────────────────
+
   Widget _buildNavBar(bool isDesktop) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -224,41 +219,33 @@ class _LandingScreenState extends State<LandingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Badge
+        // Badge - Monochromatic
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.purple.withOpacity(0.1),
+            color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: AppColors.purple.withOpacity(0.3)),
+            border: Border.all(color: AppColors.borderLight),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 6, height: 6, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.purple)),
+              Container(width: 6, height: 6, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.accent)),
               const SizedBox(width: 8),
-              Text('AI-Powered Face Recognition', style: TextStyle(color: AppColors.purple, fontSize: 12, fontWeight: FontWeight.w600)),
+              Text('AI-Powered Face Recognition', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w500)),
             ],
           ),
         ),
         const SizedBox(height: 24),
 
-        // Headline
+        // Headline - Clean white text
         RichText(
-          text: TextSpan(
-            style: Theme.of(context).textTheme.displayLarge,
+          text: const TextSpan(
+            style: TextStyle(fontSize: 56, fontWeight: FontWeight.w700, color: AppColors.textPrimary, letterSpacing: -2, height: 1.1),
             children:  [
               TextSpan(text: 'Your Face.\n'),
               TextSpan(text: 'Your Photos.\n'),
-              TextSpan(
-                text: 'Instantly.',
-                style: TextStyle(
-                  foreground: Paint()
-                    ..shader = LinearGradient(
-                      colors: AppColors.heroGradient,
-                    ).createShader(const Rect.fromLTWH(0, 0, 300, 60)),
-                ),
-              ),
+              TextSpan(text: 'Instantly.'),
             ],
           ),
         ),
@@ -299,7 +286,7 @@ class _LandingScreenState extends State<LandingScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: List.generate(5, (_) => const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 16))),
+                Row(children: List.generate(5, (_) => const Icon(Icons.star_rounded, color: AppColors.textSecondary, size: 16))),
                 const SizedBox(height: 2),
                 Text('Trusted at 200+ events worldwide', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
               ],
@@ -316,11 +303,7 @@ class _LandingScreenState extends State<LandingScreen> {
       height: 420,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          colors: [AppColors.purple.withOpacity(0.15), AppColors.cyan.withOpacity(0.1)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.surface,
         border: Border.all(color: AppColors.border),
       ),
       child: Stack(
@@ -330,7 +313,7 @@ class _LandingScreenState extends State<LandingScreen> {
           Positioned.fill(
             child: CustomPaint(painter: _GridPainter()),
           ),
-          // Center icon
+          // Center icon - Monochromatic
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -339,23 +322,23 @@ class _LandingScreenState extends State<LandingScreen> {
                   width: 120, height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(colors: AppColors.heroGradient),
-                    boxShadow: [BoxShadow(color: AppColors.purple.withOpacity(0.5), blurRadius: 40)],
+                    color: AppColors.surfaceLight,
+                    border: Border.all(color: AppColors.borderLight),
                   ),
-                  child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 56),
+                  child: const Icon(Icons.face_retouching_natural, color: AppColors.textPrimary, size: 56),
                 ),
                 const SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(100),
                     border: Border.all(color: AppColors.success.withOpacity(0.4)),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 16),
                     const SizedBox(width: 6),
-                    Text('Face Verified', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text('Face Verified', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w500, fontSize: 13)),
                   ]),
                 ),
                 const SizedBox(height: 20),
@@ -363,7 +346,7 @@ class _LandingScreenState extends State<LandingScreen> {
               ],
             ),
           ),
-          // Floating cards
+          // Floating cards - Monochromatic
           Positioned(
             top: 20, right: -20,
             child: _FloatingCard(icon: Icons.photo_library_rounded, label: '128 Photos'),
@@ -403,10 +386,9 @@ class _LandingScreenState extends State<LandingScreen> {
       padding: EdgeInsets.symmetric(horizontal: isTablet ? 80 : 24, vertical: 80),
       child: Column(
         children: [
-          GradientText(
+          Text(
             'How it works',
             style: Theme.of(context).textTheme.headlineLarge,
-            colors: AppColors.heroGradient,
           ),
           const SizedBox(height: 48),
           if (isTablet)
@@ -441,11 +423,7 @@ class _LandingScreenState extends State<LandingScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       padding: const EdgeInsets.all(48),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.purple.withOpacity(0.2), AppColors.cyan.withOpacity(0.15)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border),
       ),
@@ -503,25 +481,24 @@ class _Logo extends StatelessWidget {
         Container(
           width: sz, height: sz,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: AppColors.heroGradient),
+            color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.borderLight),
           ),
-          child: Icon(Icons.face_retouching_natural, color: Colors.white, size: sz * 0.6),
+          child: Icon(Icons.face_retouching_natural, color: AppColors.textPrimary, size: sz * 0.6),
         ),
         const SizedBox(width: 10),
         Text('GrabPic', style: TextStyle(
           color: AppColors.textPrimary,
           fontSize: small ? 14 : 18,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         )),
         Text(' AI', style: TextStyle(
           fontSize: small ? 14 : 18,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
-          foreground: Paint()
-            ..shader = const LinearGradient(colors: AppColors.heroGradient)
-                .createShader(const Rect.fromLTWH(0, 0, 60, 20)),
+          color: AppColors.textSecondary,
         )),
       ],
     );
@@ -578,14 +555,14 @@ class _AvatarStack extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: [
-                const Color(0xFF7C3AED),
-                const Color(0xFF06B6D4),
-                const Color(0xFF10B981),
-                const Color(0xFFF59E0B),
+                AppColors.surfaceLight,
+                AppColors.card,
+                AppColors.surface,
+                AppColors.surfaceLight,
               ][i],
               border: Border.all(color: AppColors.bg, width: 2),
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 14),
+            child: const Icon(Icons.person, color: AppColors.textSecondary, size: 14),
           ),
         )),
       ),
@@ -609,9 +586,9 @@ class _FloatingCard extends StatelessWidget {
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 12)],
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, color: AppColors.purple, size: 16),
+        Icon(icon, color: AppColors.textSecondary, size: 16),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w500)),
       ]),
     );
   }
@@ -622,12 +599,12 @@ class _FeatureGrid extends StatelessWidget {
   const _FeatureGrid({required this.isDesktop});
 
   static const List<Map<String, dynamic>> features = [
-    {'icon': Icons.face_retouching_natural, 'title': 'Biometric Login',      'desc': 'Selfie-based authentication — no email or password. Instant & frictionless.',      'color': 0xFF7C3AED},
-    {'icon': Icons.folder_special_rounded,  'title': 'Private Spaces',       'desc': 'Each event gets an isolated, password-protected space. Full control for organisers.', 'color': 0xFF06B6D4},
-    {'icon': Icons.photo_library_rounded,   'title': 'AI Photo Retrieval',   'desc': 'Upload thousands of photos. Attendees find only theirs in seconds.',                 'color': 0xFF10B981},
-    {'icon': Icons.cloud_upload_rounded,    'title': 'Bulk Photo Upload',    'desc': 'Upload event galleries in one go. Background AI processing handles the indexing.',    'color': 0xFFF59E0B},
-    {'icon': Icons.lock_rounded,            'title': 'Secure by Default',    'desc': 'JWT tokens, signed storage URLs, and role-based access baked in from day one.',      'color': 0xFFEF4444},
-    {'icon': Icons.bolt_rounded,            'title': 'Fast Processing',      'desc': 'Redis-backed job queue ensures face embeddings finish in the background, not blocking your users.',                  'color': 0xFFEC4899},
+    {'icon': Icons.face_retouching_natural, 'title': 'Biometric Login',      'desc': 'Selfie-based authentication — no email or password. Instant & frictionless.',      'color': AppColors.textSecondary},
+    {'icon': Icons.folder_special_rounded,  'title': 'Private Spaces',       'desc': 'Each event gets an isolated, password-protected space. Full control for organisers.', 'color': AppColors.textSecondary},
+    {'icon': Icons.photo_library_rounded,   'title': 'AI Photo Retrieval',   'desc': 'Upload thousands of photos. Attendees find only theirs in seconds.',                 'color': AppColors.textSecondary},
+    {'icon': Icons.cloud_upload_rounded,    'title': 'Bulk Photo Upload',    'desc': 'Upload event galleries in one go. Background AI processing handles the indexing.',    'color': AppColors.textSecondary},
+    {'icon': Icons.lock_rounded,            'title': 'Secure by Default',    'desc': 'JWT tokens, signed storage URLs, and role-based access baked in from day one.',      'color': AppColors.textSecondary},
+    {'icon': Icons.bolt_rounded,            'title': 'Fast Processing',      'desc': 'Redis-backed job queue ensures face embeddings finish in the background, not blocking your users.',                  'color': AppColors.textSecondary},
   ];
 
   @override
@@ -665,7 +642,6 @@ class _FeatureCardState extends State<_FeatureCard> {
   bool _hovered = false;
   @override
   Widget build(BuildContext context) {
-    final c = Color(widget.f['color'] as int);
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit:  (_) => setState(() => _hovered = false),
@@ -673,10 +649,9 @@ class _FeatureCardState extends State<_FeatureCard> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: _hovered ? AppColors.card : const Color(0xFF131320),
+          color: _hovered ? AppColors.card : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _hovered ? c.withOpacity(0.4) : AppColors.border),
-          boxShadow: _hovered ? [BoxShadow(color: c.withOpacity(0.15), blurRadius: 24)] : [],
+          border: Border.all(color: _hovered ? AppColors.borderLight : AppColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,13 +659,14 @@ class _FeatureCardState extends State<_FeatureCard> {
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: c.withOpacity(0.15),
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
               ),
-              child: Icon(widget.f['icon'] as IconData, color: c, size: 22),
+              child: Icon(widget.f['icon'] as IconData, color: AppColors.textPrimary, size: 22),
             ),
             const SizedBox(height: 16),
-            Text(widget.f['title'] as String, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 15)),
+            Text(widget.f['title'] as String, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 15)),
             const SizedBox(height: 8),
             Text(widget.f['desc'] as String, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5)),
           ],
@@ -712,15 +688,16 @@ class _Step extends StatelessWidget {
         Container(
           width: 64, height: 64,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: AppColors.heroGradient),
+            color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
           ),
-          child: Icon(icon, color: Colors.white, size: 30),
+          child: Icon(icon, color: AppColors.textPrimary, size: 30),
         ),
         const SizedBox(height: 16),
-        Text(n, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1)),
+        Text(n, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1)),
         const SizedBox(height: 4),
-        Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+        Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Text(desc, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.5), textAlign: TextAlign.center),
       ],
@@ -743,7 +720,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.border.withOpacity(0.4)
+      ..color = AppColors.border.withOpacity(0.3)
       ..strokeWidth = 0.5;
     const step = 30.0;
     for (double x = 0; x < size.width; x += step) {

@@ -141,10 +141,11 @@ class ApiService {
   Future<void> uploadToSignedUrl({
     required String signedUrl,
     required Uint8List bytes,
+    required String contentType,
   }) async {
     final res = await http.put(
       Uri.parse(signedUrl),
-      headers: {'Content-Type': 'image/jpeg'},
+      headers: {'Content-Type': contentType},
       body: bytes,
     );
     if (res.statusCode != 200 && res.statusCode != 201 && res.statusCode != 204) {

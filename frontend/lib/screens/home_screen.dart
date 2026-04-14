@@ -77,9 +77,10 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Row(children: [
           Container(width: 24, height: 24, decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: AppColors.heroGradient),
+            color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(6),
-          ), child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 14)),
+            border: Border.all(color: AppColors.borderLight),
+          ), child: const Icon(Icons.face_retouching_natural, color: AppColors.textPrimary, size: 14)),
           const SizedBox(width: 8),
           const Text('GrabPic AI'),
         ]),
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: (i) => setState(() => _idx = i),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          selectedItemColor: AppColors.purple,
+          selectedItemColor: AppColors.textPrimary,
           unselectedItemColor: AppColors.textMuted,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.folder_outlined),       activeIcon: Icon(Icons.folder),        label: 'Spaces'),
@@ -131,13 +132,14 @@ class _SideNav extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(children: [
               Container(width: 32, height: 32, decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: AppColors.heroGradient),
+                color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(8),
-              ), child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 18)),
+                border: Border.all(color: AppColors.borderLight),
+              ), child: const Icon(Icons.face_retouching_natural, color: AppColors.textPrimary, size: 18)),
               const SizedBox(width: 10),
               RichText(text: const TextSpan(children: [
-                TextSpan(text: 'GrabPic ', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800, fontSize: 16)),
-                TextSpan(text: 'AI', style: TextStyle(color: AppColors.purple, fontWeight: FontWeight.w800, fontSize: 16)),
+                TextSpan(text: 'GrabPic ', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 16)),
+                TextSpan(text: 'AI', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 16)),
               ])),
             ]),
           ),
@@ -163,9 +165,10 @@ class _SideNav extends StatelessWidget {
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(children: [
-                Container(width: 32, height: 32, decoration: const BoxDecoration(
-                  shape: BoxShape.circle, color: AppColors.purple,
-                ), child: const Icon(Icons.person, color: Colors.white, size: 16)),
+                Container(width: 32, height: 32, decoration: BoxDecoration(
+                  shape: BoxShape.circle, color: AppColors.surfaceLight,
+                  border: Border.all(color: AppColors.borderLight),
+                ), child: const Icon(Icons.person, color: AppColors.textPrimary, size: 16)),
                 const SizedBox(width: 10),
                 Expanded(child: Text(
                   auth.user?.id.substring(0, 8) ?? '…',
@@ -199,14 +202,15 @@ class _SideNav extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: active ? AppColors.purple.withOpacity(0.15) : Colors.transparent,
+              color: active ? AppColors.surfaceLight : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: active ? AppColors.borderLight : Colors.transparent),
             ),
             child: Row(children: [
-              Icon(icon, size: 18, color: active ? AppColors.purple : AppColors.textMuted),
+              Icon(icon, size: 18, color: active ? AppColors.textPrimary : AppColors.textMuted),
               const SizedBox(width: 10),
               Text(label, style: TextStyle(
-                color: active ? AppColors.purple : AppColors.textSecondary,
+                color: active ? AppColors.textPrimary : AppColors.textSecondary,
                 fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                 fontSize: 14,
               )),
@@ -319,14 +323,6 @@ class _SpaceCardState extends State<_SpaceCard> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = [
-      [AppColors.purple, const Color(0xFF4F1DA0)],
-      [AppColors.cyan, const Color(0xFF065C6D)],
-      [AppColors.success, const Color(0xFF065F46)],
-    ];
-    final idx = widget.space.id.hashCode % 3;
-    final c   = colors[idx.abs()];
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit:  (_) => setState(() => _hovered = false),
@@ -339,8 +335,7 @@ class _SpaceCardState extends State<_SpaceCard> {
           decoration: BoxDecoration(
             color: AppColors.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _hovered ? c[0].withOpacity(0.5) : AppColors.border),
-            boxShadow: _hovered ? [BoxShadow(color: c[0].withOpacity(0.2), blurRadius: 16)] : [],
+            border: Border.all(color: _hovered ? AppColors.borderLight : AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,14 +343,15 @@ class _SpaceCardState extends State<_SpaceCard> {
               Container(
                 width: 40, height: 40,
                 decoration: BoxDecoration(
-                  color: c[0].withOpacity(0.15),
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
                 ),
-                child: Icon(Icons.folder_rounded, color: c[0], size: 20),
+                child: const Icon(Icons.folder_rounded, color: AppColors.textPrimary, size: 20),
               ),
               const SizedBox(height: 12),
               Text(widget.space.name,
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 15),
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 15),
                   maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),
               Text(
@@ -368,11 +364,15 @@ class _SpaceCardState extends State<_SpaceCard> {
               Row(children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: c[0].withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                  child: Text('View Gallery', style: TextStyle(color: c[0], fontSize: 11, fontWeight: FontWeight.w600)),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Text('View Gallery', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500)),
                 ),
                 const Spacer(),
-                Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.textMuted),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.textMuted),
               ]),
             ],
           ),
@@ -533,8 +533,7 @@ class _ImageTileState extends State<_ImageTile> {
           duration: const Duration(milliseconds: 150),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _hovered ? AppColors.purple : AppColors.border),
-            boxShadow: _hovered ? [BoxShadow(color: AppColors.purple.withOpacity(0.3), blurRadius: 12)] : [],
+            border: Border.all(color: _hovered ? AppColors.borderLight : AppColors.border),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -545,7 +544,7 @@ class _ImageTileState extends State<_ImageTile> {
               if (_hovered)
                 Container(
                   color: Colors.black.withOpacity(0.4),
-                  child: const Icon(Icons.zoom_in_rounded, color: Colors.white, size: 28),
+                  child: const Icon(Icons.zoom_in_rounded, color: AppColors.textPrimary, size: 28),
                 ),
             ]),
           ),
@@ -641,9 +640,10 @@ class _UploadTab extends StatelessWidget {
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     leading: Container(width: 40, height: 40, decoration: BoxDecoration(
-                      color: AppColors.purple.withOpacity(0.15),
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(10),
-                    ), child: const Icon(Icons.folder_rounded, color: AppColors.purple, size: 20)),
+                      border: Border.all(color: AppColors.border),
+                    ), child: const Icon(Icons.folder_rounded, color: AppColors.textPrimary, size: 20)),
                     title: Text(s.name, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                     subtitle: const Text('Tap to upload photos to this space', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                     trailing: const Icon(Icons.cloud_upload_rounded, color: AppColors.textMuted),
@@ -678,7 +678,20 @@ class _UploadScreenState extends State<UploadScreen> {
   String?           _error;
   String?           _success;
   int               _progress  = 0;
-
+ String _getContentType(String name) {
+  final ext = name.split('.').last.toLowerCase();
+  switch (ext) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'webp':
+      return 'image/webp';
+    default:
+      return 'application/octet-stream';
+  }
+}
   Future<void> _pickFiles() async {
     final files = await _picker.pickMultiImage(imageQuality: 85);
     if (files.isEmpty) return;
@@ -706,7 +719,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
       // 2. Upload to GCS
       for (var i = 0; i < resp.urls.length; i++) {
-        await _api.uploadToSignedUrl(signedUrl: resp.urls[i].signedUrl, bytes: _picked[i].bytes);
+        await _api.uploadToSignedUrl(signedUrl: resp.urls[i].signedUrl, bytes: _picked[i].bytes, contentType: _getContentType(_picked[i].name));
         setState(() => _progress = i + 1);
       }
 
@@ -748,7 +761,7 @@ class _UploadScreenState extends State<UploadScreen> {
                       border: Border.all(color: AppColors.border, style: BorderStyle.solid),
                     ),
                     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(Icons.cloud_upload_rounded, size: 40, color: AppColors.purple),
+                      Icon(Icons.cloud_upload_rounded, size: 40, color: AppColors.textPrimary),
                       const SizedBox(height: 12),
                       const Text('Click to select photos', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 4),
@@ -798,7 +811,7 @@ class _UploadScreenState extends State<UploadScreen> {
                     const SizedBox(height: 8),
                     LinearProgressIndicator(
                       backgroundColor: AppColors.border,
-                      color: AppColors.purple,
+                      color: AppColors.textPrimary,
                       value: _picked.isNotEmpty
                           ? _progress / (_progress + _picked.length)
                           : null,
@@ -881,14 +894,15 @@ class _ProfileTab extends StatelessWidget {
             padding: const EdgeInsets.all(32),
             child: Column(
               children: [
-                // Avatar
+                // Avatar - Monochromatic
                 Container(
                   width: 96, height: 96,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: AppColors.heroGradient),
+                    color: AppColors.surfaceLight,
+                    border: Border.all(color: AppColors.borderLight),
                   ),
-                  child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 48),
+                  child: const Icon(Icons.face_retouching_natural, color: AppColors.textPrimary, size: 48),
                 ),
                 const SizedBox(height: 20),
                 Text('Face ID User', style: Theme.of(context).textTheme.headlineMedium),
@@ -901,11 +915,11 @@ class _ProfileTab extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.success.withOpacity(0.4)),
                   ),
-                  child: const Text('Verified', style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.w600)),
+                  child: const Text('Verified', style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.w500)),
                 ),
                 const SizedBox(height: 40),
 

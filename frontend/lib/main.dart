@@ -1,12 +1,12 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart' hide ImageProvider;
+import 'package:grabpic_frontend/utils/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/space_provider.dart';
 import 'services/storage_service.dart';
 import 'models/models.dart';
-import 'utils/app_theme.dart';
 import 'screens/landing_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -82,7 +82,9 @@ class _AuthWrapperState extends State<_AuthWrapper> {
             Container(
               width: 64, height: 64,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: AppColors.heroGradient),
+                gradient: const LinearGradient(colors: AppColors.subtleGradient,
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 36),
@@ -90,7 +92,8 @@ class _AuthWrapperState extends State<_AuthWrapper> {
             const SizedBox(height: 24),
             const SizedBox(
               width: 24, height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.purple),
+              child: CircularProgressIndicator(strokeWidth: 2, color: 
+             AppColors.accent ),
             ),
           ]),
         ),
