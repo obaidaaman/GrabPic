@@ -10,7 +10,7 @@ from src.core.auth.router import auth_router
 from src.core.face_recognition.router import file_router    
 from firebase_admin import storage, credentials
 from qdrant_client import QdrantClient
-from qdrant_client.models import VectorParams
+from qdrant_client.models import VectorParams, Distance
 import os
 from dotenv import load_dotenv
 from src.utils.db import get_db
@@ -58,7 +58,7 @@ async def lifespan(app : FastAPI):
         if not qdrant_client.collection_exists("faces_collection"):
             qdrant_client.create_collection(
                 collection_name="faces_collection"
-         , vectors_config=VectorParams(size=512,)   )
+         , vectors_config=VectorParams(size=512,distance= Distance.COSINE))
         app.state.qdrant_client = qdrant_client
         
         app.state.db = get_db()

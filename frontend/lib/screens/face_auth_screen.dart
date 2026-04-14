@@ -1,9 +1,6 @@
 // lib/screens/face_auth_screen.dart
 //
-// Web-safe face-auth page:
-//   • "Use Camera"  — ImageSource.camera  (opens device camera on mobile web)
-//   • "Upload Photo" — ImageSource.gallery (file picker on desktop web)
-//   • Shows preview → Confirm → calls POST /auth/face-auth → JWT saved
+// Web-safe face-auth page - Monochromatic theme.
 
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -108,10 +105,11 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
             Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: AppColors.heroGradient),
+                color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.borderLight),
               ),
-              child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 16),
+              child: const Icon(Icons.face_retouching_natural, color: AppColors.textPrimary, size: 16),
             ),
             const SizedBox(width: 10),
             const Text('GrabPic AI'),
@@ -176,21 +174,15 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        // Gradient circle icon
+        // Icon - Monochromatic
         Container(
           width: 72, height: 72,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: AppColors.heroGradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(color: AppColors.purple.withOpacity(0.4), blurRadius: 24),
-            ],
+            color: AppColors.surfaceLight,
+            border: Border.all(color: AppColors.borderLight),
           ),
-          child: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 36),
+          child: const Icon(Icons.face_retouching_natural, color: AppColors.textPrimary, size: 36),
         ),
         const SizedBox(height: 20),
         Text(
@@ -212,7 +204,7 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
     return GlassCard(
       child: Column(
         children: [
-          // Dashed circle placeholder
+          // Circle placeholder - Monochromatic
           Container(
             width: 180, height: 180,
             decoration: BoxDecoration(
@@ -301,7 +293,7 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
               const SizedBox(width: 8),
               Text(
                 'Photo ready',
-                style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w600),
+                style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w500),
               ),
             ],
           ),

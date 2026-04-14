@@ -130,17 +130,23 @@ logger = logging.getLogger(__name__)
 async def get_signed_urls(filenames: List[str], space_id : str, bucket):
      response_data =[]
      for name in filenames:
-        file_extension = name.split(".")[-1]
+        file_extension = name.split(".")[-1].lower()
         unique_name = f"{uuid.uuid4()}.{file_extension}"
         storage_path = f"spaces/{space_id}/uploads/{unique_name}"
-            
+        content_type_map = {
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+    "webp": "image/webp"
+}
+        content_type = content_type_map.get(file_extension, "application/octet-stream")
             # 2. Generate the Signed URL (Valid for 15 mins)
         blob = bucket.blob(storage_path)
         signed_url = blob.generate_signed_url(
                 version="v4",
                 expiration=timedelta(minutes=15),
                 method="PUT",
-                content_type="image/jpeg"
+                
               
             )
 # Storarge path is client will send again through process.
