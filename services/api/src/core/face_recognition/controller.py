@@ -4,6 +4,9 @@ from typing import List
 import logging
 from dotenv import load_dotenv
 import json
+
+from fastapi.concurrency import run_in_threadpool
+from src.core.rabbitmq.sender import RabbitMQPublisher
 load_dotenv()
 logger = logging.getLogger(__name__)
 
@@ -161,10 +164,12 @@ async def get_signed_urls(filenames: List[str], space_id : str, bucket):
     
 
 
-async def call_face_embedding_service(paths, space_id, httpx_client,redis_client, email):
+async def call_face_embedding_service(paths, space_id, email, rabbitmq_client : RabbitMQPublisher):
    # await httpx_client.post(os.getenv("MODEL_MICRO_SERVICE_URL_FACE"), json={"storage_paths": paths, "space_id": space_id},timeout=30)
     
-    job_id = await push_job(paths=paths, space_id=space_id, redis_conn=redis_client, email=email)
+
+    
+    job_id = await push_job(paths=paths, space_id=space_id, rabbitmq_client=rabbitmq_client, email=email)
     return {
          "status" : "Accepted",
          "message": f"Embeddings for {len(paths)} images are being processed in the background.",
@@ -172,10 +177,11 @@ async def call_face_embedding_service(paths, space_id, httpx_client,redis_client
          "job_id": job_id
     }
 
-async def push_job(paths, space_id,redis_conn, email):
+async def push_job(paths : list[str], space_id : str,rabbitmq_client: RabbitMQPublisher, email : str):
 
-    QUEUE= "face_jobs"
+    QUEUE= "image_queue"
     job_id = str(uuid.uuid4())
+    
     job_data = {
         "job_id": job_id,
         "payload": {
@@ -184,9 +190,28 @@ async def push_job(paths, space_id,redis_conn, email):
             "notification_email" : email
             
         }
-    }
 
-    # Pushing the job to the Redis queue
-    await redis_conn.set(f"job_status:{job_data['job_id']}", "queued")
-    await redis_conn.lpush(QUEUE, json.dumps(job_data))
+    }
+    await run_in_threadpool(rabbitmq_client.publish_work, job_data)
+
     return job_id
+
+
+# async def push_job(paths, space_id,redis_conn, email):
+
+#     QUEUE= "face_jobs"
+#     job_id = str(uuid.uuid4())
+#     job_data = {
+#         "job_id": job_id,
+#         "payload": {
+#             "storage_paths": paths,
+#             "space_id": space_id,
+#             "notification_email" : email
+            
+#         }
+#     }
+
+#     # Pushing the job to the Redis queue
+#     await redis_conn.set(f"job_status:{job_data['job_id']}", "queued")
+#     await redis_conn.lpush(QUEUE, json.dumps(job_data))
+#     return job_id

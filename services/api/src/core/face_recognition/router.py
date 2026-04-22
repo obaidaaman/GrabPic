@@ -23,7 +23,7 @@ async def upload_files(requests: Request, data: FaceEmbeddingRequestModel, curre
 
     
 
-    await call_face_embedding_service(data.storagePaths,data.space_id, requests.app.state.http_client,requests.app.state.redis_conn, data.email)
+    await call_face_embedding_service(data.storagePaths,data.space_id, requests.app.state.http_client,requests.app.state.redis_conn, data.email,requests.app.state.rabbitmq)
    
 
     return {

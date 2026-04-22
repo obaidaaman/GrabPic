@@ -17,10 +17,9 @@ from src.utils.db import get_db
 import httpx
 import time
 from upstash_redis.asyncio import Redis
+from src.core.rabbitmq.sender import RabbitMQConnection, RabbitMQPublisher
 from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
-
-
 
 
 logging.basicConfig(
@@ -62,6 +61,9 @@ async def lifespan(app : FastAPI):
         app.state.qdrant_client = qdrant_client
         
         app.state.db = get_db()
+        connection = RabbitMQConnection()
+        publisher = RabbitMQPublisher(connection)
+        app.state.rabbitmq = publisher
         app.state.storage_bucket = storage.bucket()
         app.state.http_client = httpx.AsyncClient()
         app.state.redis_conn = Redis(url=os.getenv("UPSTASH_REDIS_URL"), token=os.getenv("UPSTASH_REDIS_TOKEN"))
@@ -72,6 +74,7 @@ async def lifespan(app : FastAPI):
         raise
     yield
     logger.info("Shutting down: Releasing resources...")
+    app.state.rabbitmq.connection.close()
 origins = [
     "*"
 ]
