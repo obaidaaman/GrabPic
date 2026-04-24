@@ -5,13 +5,13 @@ class AppConstants {
   static const String baseUri = 'http://127.0.0.1:8000';
 
   // Auth
-  static const String authFaceAuth     = '/auth/face-auth';
+  static const String authFaceAuth     = '/auth/face';
 
   // Spaces
-  static const String usersCreateSpace = '/users/create-space';
-  static const String usersGetSpaces   = '/users/get-spaces';
-  static const String usersJoinSpace   = '/users/join-space';
-  static const String usersGetImages   = '/users/get-images';
+  static const String usersCreateSpace = '/users/spaces';
+  static const String usersGetSpaces   = '/users/spaces/';
+  static const String usersJoinSpace   = '/users/spaces/join';
+  static const String usersGetImages   = '/users/spaces/images';
 
   // Files
   static const String filesUrl         = '/files/url';

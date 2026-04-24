@@ -2,6 +2,7 @@ from datetime import timedelta
 import uuid
 from typing import List
 import logging
+import aio_pika
 from dotenv import load_dotenv
 import json
 load_dotenv()
@@ -161,10 +162,17 @@ async def get_signed_urls(filenames: List[str], space_id : str, bucket):
     
 
 
-async def call_face_embedding_service(paths, space_id, httpx_client,redis_client, email):
+async def call_face_embedding_service(paths, space_id,redis_client, email,rabbitmq_client):
    # await httpx_client.post(os.getenv("MODEL_MICRO_SERVICE_URL_FACE"), json={"storage_paths": paths, "space_id": space_id},timeout=30)
+
     
     job_id = await push_job(paths=paths, space_id=space_id, redis_conn=redis_client, email=email)
+
+
+
+
+    job_id = await push_job(paths=paths, space_id=space_id, rabbitmq_client=rabbitmq_client, email=email)
+
     return {
          "status" : "Accepted",
          "message": f"Embeddings for {len(paths)} images are being processed in the background.",
@@ -172,21 +180,46 @@ async def call_face_embedding_service(paths, space_id, httpx_client,redis_client
          "job_id": job_id
     }
 
-async def push_job(paths, space_id,redis_conn, email):
+async def push_job(paths, space_id,rabbitmq_client, email):
 
     QUEUE= "face_jobs"
     job_id = str(uuid.uuid4())
+
     job_data = {
         "job_id": job_id,
         "payload": {
             "storage_paths": paths,
             "space_id": space_id,
             "notification_email" : email
-            
+          
+
         }
     }
 
-    # Pushing the job to the Redis queue
-    await redis_conn.set(f"job_status:{job_data['job_id']}", "queued")
-    await redis_conn.lpush(QUEUE, json.dumps(job_data))
+    async with rabbitmq_client.channel() as channel:
+        queue = await channel.declare_queue(
+            "image_queue",
+            durable=True,
+            arguments={"x-queue-type": "quorum",
+                       'x-dead-letter-exchange': '',              # use default exchange
+        'x-dead-letter-routing-key': 'image_queue_failed'}
+        )
+        image_queue = await channel.declare_queue(
+            "image_queue_failed",
+            durable=True
+        )
+        await channel.default_exchange.publish(
+            aio_pika.Message(
+                body=json.dumps(job_data).encode(),
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT  
+            ),
+            routing_key="image_queue"
+        )
+    
     return job_id
+    # await run_in_threadpool(rabbitmq_client.publish_work, job_data)
+
+    # Pushing the job to the Redis queue
+    # await redis_conn.set(f"job_status:{job_data['job_id']}", "queued")
+    # await redis_conn.lpush(QUEUE, json.dumps(job_data))
+    # return job_id

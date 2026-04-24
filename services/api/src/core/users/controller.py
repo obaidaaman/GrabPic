@@ -117,8 +117,9 @@ def join_space(space_model: CreateSpaceModel, db, user_id: str):
 
 def get_images(user_id, db, space_id, bucket):
     try:
-      
         image_ids = set()
+
+        # Query 1: Images where user's face appears (via appearances collection)
         docs = (
             db.collection("appearances")
             .where(filter=FieldFilter("face_id", "==", user_id))
@@ -130,8 +131,27 @@ def get_images(user_id, db, space_id, bucket):
             img_id = doc.get("image_id")
             if img_id:
                 image_ids.add(img_id)
-        
+
+        # Query 2: Images uploaded by this user (fallback - ensures uploader sees their uploads)
+        uploaded_docs = (
+            db.collection("images")
+            .where(filter=FieldFilter("space_id", "==", space_id))
+            .where(filter=FieldFilter("uploaded_by", "==", user_id))
+            .stream()
+        )
+
+        for doc in uploaded_docs:
+            image_ids.add(doc.id)
+
+        # Debug logging
         if not image_ids:
+            print(f"[DEBUG] No images found for user {user_id} in space {space_id}")
+            # Check if user's face exists in Qdrant
+            user_doc = db.collection("users").document(user_id).get()
+            if user_doc.exists:
+                print(f"[DEBUG] User doc exists, face_id: {user_doc.to_dict().get('face_id')}")
+            else:
+                print(f"[DEBUG] User doc NOT found for {user_id}")
             return []
 
       
