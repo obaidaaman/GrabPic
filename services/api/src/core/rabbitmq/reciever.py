@@ -5,17 +5,8 @@ from dotenv import load_dotenv
 import os
 import httpx
 import json
+import time
 load_dotenv()
-
-http_client = httpx.Client(timeout=httpx.Timeout(120.0, connect=10.0))
-connection = pika.BlockingConnection(
-    pika.URLParameters(os.getenv("RABBIT_URI")))
-channel = connection.channel()
-
-channel.queue_declare(queue='image_queue', durable=True, arguments={'x-queue-type': 'quorum'})
-print(' [*] Waiting for messages. To exit press CTRL+C')
-
-
 def callback(ch, method, properties, body):
     try:
     
@@ -27,8 +18,8 @@ def callback(ch, method, properties, body):
         response = http_client.post(
                 os.getenv("MODEL_MICRO_SERVICE_URL_FACE"),
                 json={
-                    "storage_paths": data["storage_paths"],
-                    "space_id": data["space_id"]
+                    "storage_paths": data["payload"]["storage_paths"],
+                    "space_id": data["payload"]["space_id"]
                 },
                 timeout=httpx.Timeout(120.0, connect=10.0)
             )
@@ -39,8 +30,30 @@ def callback(ch, method, properties, body):
     except Exception as e:
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
+http_client = httpx.Client(timeout=httpx.Timeout(120.0, connect=10.0))
 
-channel.basic_qos(prefetch_count=1)
-channel.basic_consume(queue='image_queue', on_message_callback=callback)
 
-channel.start_consuming()
+
+
+while True:
+    try:
+        connection = pika.BlockingConnection(pika.URLParameters(os.getenv("RABBIT_URI")))
+        channel = connection.channel()
+        channel.queue_declare(
+            queue='image_queue',
+            durable=True,
+            arguments={
+        'x-queue-type': 'quorum',
+        'x-dead-letter-exchange': '',                 
+        'x-dead-letter-routing-key': 'image_queue_failed'  
+    })
+        channel.queue_declare(queue='image_queue_failed', durable=True)
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(queue='image_queue', on_message_callback=callback)
+        print("Connected. Waiting for messages...")
+        channel.start_consuming()
+    except pika.exceptions.AMQPConnectionError as e:
+        print(f"Connection lost: {e}. Retrying in 5 seconds...")
+        time.sleep(5)
+    except KeyboardInterrupt:
+        break

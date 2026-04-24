@@ -6,7 +6,7 @@ from src.core.auth.dtos import AuthResponseModel
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@auth_router.post("/face-auth",status_code=status.HTTP_200_OK, response_model=AuthResponseModel)
+@auth_router.post("/face",status_code=status.HTTP_200_OK, response_model=AuthResponseModel)
 async def face_auth(requests: Request,file : UploadFile = File(...)):
     contents = file.file.read()
     
