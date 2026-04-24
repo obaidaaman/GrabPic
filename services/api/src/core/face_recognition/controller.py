@@ -7,6 +7,7 @@ import json
 
 from fastapi.concurrency import run_in_threadpool
 from src.core.rabbitmq.sender import RabbitMQPublisher
+import aio_pika
 load_dotenv()
 logger = logging.getLogger(__name__)
 
@@ -192,9 +193,29 @@ async def push_job(paths : list[str], space_id : str,rabbitmq_client: RabbitMQPu
         }
 
     }
-    await run_in_threadpool(rabbitmq_client.publish_work, job_data)
-
+    async with rabbitmq_client.channel() as channel:
+        queue = await channel.declare_queue(
+            "image_queue",
+            durable=True,
+            arguments={"x-queue-type": "quorum",
+                       'x-dead-letter-exchange': '',              # use default exchange
+        'x-dead-letter-routing-key': 'image_queue_failed'}
+        )
+        image_queue = await channel.declare_queue(
+            "image_queue_failed"
+        )
+        await channel.default_exchange.publish(
+            aio_pika.Message(
+                body=json.dumps(job_data).encode(),
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT  
+            ),
+            routing_key="image_queue"
+        )
+    
     return job_id
+    # await run_in_threadpool(rabbitmq_client.publish_work, job_data)
+
+    # return job_id
 
 
 # async def push_job(paths, space_id,redis_conn, email):
