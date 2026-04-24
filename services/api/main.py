@@ -17,10 +17,10 @@ from src.utils.db import get_db
 import httpx
 import time
 from upstash_redis.asyncio import Redis
+from src.core.rabbitmq.sender import RabbitMQConnection, RabbitMQPublisher
 from fastapi.middleware.cors import CORSMiddleware
+import aio_pika
 load_dotenv()
-
-
 
 
 logging.basicConfig(
@@ -62,16 +62,32 @@ async def lifespan(app : FastAPI):
         app.state.qdrant_client = qdrant_client
         
         app.state.db = get_db()
+        # connection = RabbitMQConnection()
+        # publisher = RabbitMQPublisher(connection)
+        # app.state.rabbitmq = publisher
         app.state.storage_bucket = storage.bucket()
         app.state.http_client = httpx.AsyncClient()
+        rabbitmq = await aio_pika.connect_robust(os.getenv("RABBIT_URI"))
+        app.state.rabbitmq = rabbitmq
         app.state.redis_conn = Redis(url=os.getenv("UPSTASH_REDIS_URL"), token=os.getenv("UPSTASH_REDIS_TOKEN"))
-       
+        
+        try:
+            qdrant_client.create_payload_index(
+            collection_name="faces_collection",
+            field_name="space_id",
+            field_schema={"type": "keyword"}
+        )
+        except Exception:
+            pass
         
     except Exception as e:
         logger.error(f"Failed to load AI models:{str(e)}")
         raise
     yield
     logger.info("Shutting down: Releasing resources...")
+    if 'rabbitmq' in locals():
+
+        await rabbitmq.close()
 origins = [
     "*"
 ]
