@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket):
+async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket, uploaded_by: str = None):
     """
     Worker function that processes images one by one in the background.
     """
@@ -20,7 +20,7 @@ async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket):
         collection_name="faces_collection",
         vectors_config=VectorParams(size=512, distance=Distance.COSINE),
     )
-    qdrant.create_payload_index(collection_name="faces_collection", field_name="space_id", field_schema={"type": PayloadSchemaType.KEYWORD})
+    
       
     for path in paths:
         try:
@@ -36,7 +36,8 @@ async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket):
                 db=db,
                 fileName=path.split("/")[-1],
                 space_id=space_id,
-                storage_path=path
+                storage_path=path,
+                uploaded_by=uploaded_by
             )
             logger.info(f"Background: Processed {path}")
             
@@ -48,7 +49,7 @@ async def run_bulk_ai_processing(paths, space_id, face_app, qdrant, db, bucket):
 
 
 
-async def upload_photos(face_app, contents : bytes, client, db , fileName:str, space_id:str, storage_path:str):
+async def upload_photos(face_app, contents : bytes, client, db , fileName:str, space_id:str, storage_path:str, uploaded_by: str = None):
     
     """
       Check if the face embedding exists in the DB or not, 
@@ -65,7 +66,7 @@ async def upload_photos(face_app, contents : bytes, client, db , fileName:str, s
     image_id = str(uuid.uuid4())
     bucket_name = os.getenv("STORAGE_BUCKET_NAME")
     public_url = f"https://storage.googleapis.com/{bucket_name}/{storage_path}"
-    bucket_name = os.getenv("STORAGE_BUCKET_NAME")
+    
     # This is created to map to which space does the image belongs, along with its url.
     image_ref = db.collection("images").document(image_id)
     image_ref.set({
@@ -73,6 +74,7 @@ async def upload_photos(face_app, contents : bytes, client, db , fileName:str, s
         "space_id": space_id,
         "url" : public_url,
         "storage_path": storage_path,
+        "uploaded_by": uploaded_by,
         "created_at": firestore.SERVER_TIMESTAMP
     })
     detected_faces_summary = []

@@ -42,7 +42,7 @@ def _create_token(user_id: str, is_organiser: bool) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "_id":          user_id,
-        "is_organiser": is_organiser,  
+        
         "iat":          now,         
         "exp":          now + timedelta(days=7),
     }
@@ -206,7 +206,7 @@ async def face_auth_portal(contents: bytes, db, client, httpx_client):
                 db.collection("users").document(user_id).set({
                     "face_id": user_id,
                     "auth_type": "face_biometric",
-                    "isOrganiser": False,
+                    
                     "first_seen": datetime.now(timezone.utc),
                 })
 

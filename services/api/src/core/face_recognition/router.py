@@ -27,7 +27,9 @@ async def upload_files(requests: Request, data: FaceEmbeddingRequestModel, curre
         data.storagePaths,
         data.space_id,
         data.email,
-        requests.app.state.rabbitmq)
+
+        requests.app.state.rabbitmq,
+        current_user.id)
    
 
     return {

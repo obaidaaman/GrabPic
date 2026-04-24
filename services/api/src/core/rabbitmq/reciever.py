@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 import pika
 import time
 from dotenv import load_dotenv
