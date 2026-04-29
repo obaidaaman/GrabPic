@@ -17,7 +17,7 @@ from src.utils.db import get_db
 import httpx
 import time
 from upstash_redis.asyncio import Redis
-from src.core.rabbitmq.sender import RabbitMQConnection, RabbitMQPublisher
+from src.core.rabbitmq.sender import create_rabbitmq_connection, declare_queues
 from fastapi.middleware.cors import CORSMiddleware
 import aio_pika
 load_dotenv()
@@ -65,6 +65,10 @@ async def lifespan(app : FastAPI):
         # connection = RabbitMQConnection()
         # publisher = RabbitMQPublisher(connection)
         # app.state.rabbitmq = publisher
+        rabbitmq_connection = await create_rabbitmq_connection()
+        async with rabbitmq_connection.channel() as ch:
+            await declare_queues(ch)
+        app.state.rabbitmq = rabbitmq_connection
         app.state.storage_bucket = storage.bucket()
         app.state.http_client = httpx.AsyncClient()
         rabbitmq = await aio_pika.connect_robust(os.getenv("RABBIT_URI"))
@@ -84,10 +88,9 @@ async def lifespan(app : FastAPI):
         logger.error(f"Failed to load AI models:{str(e)}")
         raise
     yield
+    await app.state.rabbitmq.close()
     logger.info("Shutting down: Releasing resources...")
-    if 'rabbitmq' in locals():
-
-        await rabbitmq.close()
+    
 origins = [
     "*"
 ]

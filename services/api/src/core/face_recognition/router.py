@@ -23,21 +23,14 @@ async def upload_files(requests: Request, data: FaceEmbeddingRequestModel, curre
 
     
 
-    await call_face_embedding_service(
+    result = await call_face_embedding_service(
         data.storagePaths,
         data.space_id,
         data.email,
-
-        requests.app.state.rabbitmq,
-        current_user.id)
+        requests.app.state.rabbitmq,)
    
 
-    return {
-        "status": "Accepted",
-        "message": f"Processing {len(data.storagePaths)} images in the background.",
-        "space_id": data.space_id
-    }
-
+    return result
 
 @file_router.get("/status", status_code=status.HTTP_200_OK)
 async def job_status(request: Request, job_id : str, current_user = Depends(is_authenticated)):
