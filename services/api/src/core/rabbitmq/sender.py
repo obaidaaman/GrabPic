@@ -1,42 +1,32 @@
-import pika
-import os
+import aio_pika
 import json
+import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
-class RabbitMQConnection:
+async def create_rabbitmq_connection():
+    connection = await aio_pika.connect_robust(os.getenv("RABBIT_URI"))
+    return connection
 
-    def __init__(self):
-        url = os.getenv("RABBIT_URI")
-        params = pika.URLParameters(url)
-
-        self.connection = pika.BlockingConnection(params)
-        self.channel = self.connection.channel()
-
-    def get_channel(self):
-        return self.channel
-
-    def close(self):
-        self.connection.close()
-
-
-class RabbitMQPublisher:
-
-    def __init__(self, connection):
-        self.channel = connection.channel
-        self.queue= "image_queue"
-        self.connection = connection
-
-        self.channel.queue_declare(queue = 'image_queue', durable=True, arguments ={'x-queue-type': 'quorum'})
-
-    def publish_work(self, message):
-        self.channel.basic_publish(
-             exchange='',
-        routing_key='image_queue',
-        body=json.dumps(message).encode(),
-        properties=pika.BasicProperties(
-        delivery_mode=pika.DeliveryMode.Persistent
+async def declare_queues(channel):
+    await channel.declare_queue(
+        "image_queue",
+        durable=True,
+        arguments={
+            "x-queue-type": "quorum",
+            "x-dead-letter-exchange": "",
+            "x-dead-letter-routing-key": "image_queue_failed"
+        }
     )
-        )
-        print(f"[x] Sent {message}")
-        
+    await channel.declare_queue(
+        "image_queue_retry",
+        durable=True,
+        arguments={
+            "x-queue-type": "quorum",
+            "x-message-ttl": 10000,              
+            "x-dead-letter-exchange": "",
+            "x-dead-letter-routing-key": "image_queue"
+        }
+    )
+    await channel.declare_queue("image_queue_failed", durable=True)
