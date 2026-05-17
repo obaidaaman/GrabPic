@@ -201,7 +201,7 @@ async def push_job(paths, space_id,rabbitmq_client, email):
             "image_queue",
             durable=True,
             arguments={"x-queue-type": "quorum",
-                       'x-dead-letter-exchange': '',              # use default exchange
+                       'x-dead-letter-exchange': '',             
         'x-dead-letter-routing-key': 'image_queue_failed'}
         )
         image_queue = await channel.declare_queue(

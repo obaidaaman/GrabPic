@@ -17,7 +17,8 @@ from src.utils.db import get_db
 import httpx
 import time
 from upstash_redis.asyncio import Redis
-from src.core.rabbitmq.sender import RabbitMQConnection, RabbitMQPublisher
+
+
 from fastapi.middleware.cors import CORSMiddleware
 import aio_pika
 load_dotenv()
@@ -102,11 +103,9 @@ app.add_middleware(CORSMiddleware,
     allow_headers=["*"],)
 
 
-# @app.get("/health")
-# def healthy():
-#     print("Received health check request.")
-#     time.sleep(3)
-#     print("API is healthy and running!")
+@app.get("/health",status_code=200)
+def healthy():
+    return {"status": "ok", "message": "Server is healthy and running."}
 
 # @app.get("/health-async")
 

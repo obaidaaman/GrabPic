@@ -2,7 +2,7 @@
 
 class AppConstants {
 
-  static const String baseUri = 'http://127.0.0.1:8000';
+  static const String baseUri = 'https://grabpic-pcdc.onrender.com';
 
   // Auth
   static const String authFaceAuth     = '/auth/face';
