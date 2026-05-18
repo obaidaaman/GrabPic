@@ -105,7 +105,7 @@ app.add_middleware(CORSMiddleware,
     allow_headers=["*"],)
 
 
-@app.get("/health",status_code=200)
+@app.route("/health", methods=["GET", "HEAD"], status_code=200)
 def healthy():
     return {"status": "ok", "message": "Server is healthy and running."}
 

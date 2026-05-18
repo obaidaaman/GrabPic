@@ -89,7 +89,7 @@ def retry_message(ch, method, properties, body, retry_count):
         )
     )
     ch.basic_ack(delivery_tag=method.delivery_tag)
-    print(f"[↻] Retry attempt {retry_count + 1}/{MAX_RETRIES} queued.")
+    print(f"Retry attempt {retry_count + 1}/{MAX_RETRIES} queued.")
 
 
 def callback(ch, method, properties, body):
@@ -119,7 +119,7 @@ def callback(ch, method, properties, body):
         if retry_count < MAX_RETRIES:
             retry_message(ch, method, properties, body, retry_count)
         else:
-            print(f"[x] Max retries reached. Sending to DLQ.")
+            print("Max retries reached. Sending to DLQ.")
             ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
 
